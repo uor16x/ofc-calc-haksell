@@ -1,4 +1,4 @@
-data CardValue = Two
+data Value = Two
     | Three
     | Four
     | Five
@@ -11,3 +11,8 @@ data CardValue = Two
     | Queen
     | King
     | Ace deriving (Show, Eq, Ord, Bounded)
+
+data Suit = Hearts
+    | Diamonds
+    | Clubs
+    | Spades deriving (Eq, Show, Enum, Bounded)
