@@ -5,7 +5,7 @@ import Test.HUnit
     ( assertEqual,
       runTestTT,
       Counts,
-      Test(TestLabel, TestCase, TestList) )
+      Test(TestLabel, TestCase) )
 
 testMethod :: String
 testMethod = "parseSuit"
@@ -27,5 +27,6 @@ generateTests method = [ TestLabel name $ TestCase(assertEqual (getDesc arg) exp
         getDesc arg = method ++ " " ++ show arg
 
 
-result :: Test
-result = TestList (generateTests "parseSuit")
+
+result :: [Test]
+result = generateTests "parseSuit"
