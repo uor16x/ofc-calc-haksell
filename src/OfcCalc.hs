@@ -1,5 +1,10 @@
+module OfcCalc (someFunc) where
+
 import Data.List (elemIndex)
 import Data.Char ( toLower, isDigit )
+
+someFunc :: IO ()
+someFunc = putStrLn "someFunc"
 
 data Value = Two
     | Three
@@ -57,3 +62,4 @@ parseSuit symbol = case suitIndex of
         allSuits = [minBound .. maxBound] :: [Suit]
         suitSymbols = [toLower . head . show $ s | s <- allSuits]
         suitIndex = symbol `elemIndex` suitSymbols
+
