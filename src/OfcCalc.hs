@@ -1,4 +1,10 @@
-module OfcCalc (someFunc) where
+module OfcCalc (
+    Value(..),
+    Suit(..),
+    parseValue,
+    parseSuit,
+    Card
+) where
 
 import Data.List (elemIndex)
 import Data.Char ( toLower, isDigit )

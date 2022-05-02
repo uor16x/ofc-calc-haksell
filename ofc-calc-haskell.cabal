@@ -57,7 +57,7 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base ^>=4.14.3.0, HUnit
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -78,6 +78,7 @@ executable ofc-calc-haskell
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.14.3.0,
+        HUnit,
         ofc-calc-haskell
 
     -- Directories containing source files.
@@ -100,4 +101,4 @@ test-suite ofc-calc-haskell-test
     main-is:          OfcCalcTest.hs
 
     -- Test dependencies.
-    build-depends:    base ^>=4.14.3.0
+    build-depends:    base ^>=4.14.3.0, ofc-calc-haskell, HUnit
