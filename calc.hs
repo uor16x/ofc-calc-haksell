@@ -1,5 +1,6 @@
 import Data.List (elemIndex)
-import Data.Char (toLower)
+import Data.Char ( toLower, isDigit )
+
 data Value = Two
     | Three
     | Four
@@ -12,7 +13,31 @@ data Value = Two
     | Jack
     | Queen
     | King
-    | Ace deriving (Show, Eq, Ord, Bounded)
+    | Ace deriving (Show, Eq, Enum, Ord, Bounded)
+
+parseValue :: Char -> Maybe Value
+parseValue symbol
+    | isDigit symbol = getDigitValue . digitCharToInt $ symbol
+    | otherwise = getBroadwayValue symbol
+    where
+        digitCharToInt :: Char -> Int
+        digitCharToInt c = read [c] :: Int
+
+        getDigitValue :: Int -> Maybe Value
+        getDigitValue digit
+            | digit > 1 && digit < 10 = Just (toEnum digit :: Value)
+            | otherwise = Nothing
+
+        allValues :: [Value]
+        allValues = [minBound .. maxBound] :: [Value]
+
+        broadwaySymbols :: [Char]
+        broadwaySymbols = [head . show $ s | s <- take 5 $ reverse allValues]
+
+        getBroadwayValue :: Char -> Maybe Value
+        getBroadwayValue v = case v `elemIndex` broadwaySymbols of
+            Nothing -> Nothing
+            Just index -> Just (toEnum $ length allValues - index - 1 :: Value)
 
 data Suit = Hearts
     | Diamonds
