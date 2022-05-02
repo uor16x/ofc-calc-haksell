@@ -7,9 +7,6 @@ import Test.HUnit
       Counts,
       Test(TestLabel, TestCase) )
 
-testMethod :: String
-testMethod = "parseSuit"
-
 testData :: [([Char], Char, Maybe Suit)]
 testData = [
         ("Should return hearts", 'h', Just Hearts),
@@ -25,8 +22,6 @@ generateTests :: String -> [Test]
 generateTests method = [ TestLabel name $ TestCase(assertEqual (getDesc arg) expected (parseSuit arg)) | (name, arg, expected) <- testData ]
     where
         getDesc arg = method ++ " " ++ show arg
-
-
 
 result :: [Test]
 result = generateTests "parseSuit"
