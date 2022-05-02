@@ -36,7 +36,7 @@ parseValue symbol
 
         getDigitValue :: Int -> Maybe Value
         getDigitValue digit
-            | digit > 1 && digit < 10 = Just (toEnum digit :: Value)
+            | digit > 1 && digit < 10 = Just (toEnum $ digit - 2 :: Value)
             | otherwise = Nothing
 
         allValues :: [Value]
