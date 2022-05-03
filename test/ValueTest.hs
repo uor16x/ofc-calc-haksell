@@ -1,6 +1,6 @@
 module ValueTest(result) where
 
-import OfcCalc (Value(..), parseValue)
+import CardParts.Values ( parseValue, Value(..) ) 
 import Test.HUnit
     ( assertEqual,
       runTestTT,

@@ -48,7 +48,11 @@ extra-source-files:
 
 library
     -- Modules exported by the library.
-    exposed-modules:  OfcCalc
+    exposed-modules:
+        OfcCalc,
+        CardParts.Suits,
+        CardParts.Values,
+        CardParts.Cards
 
     -- Modules included in this library but not exported.
     -- other-modules:

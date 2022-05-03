@@ -1,6 +1,6 @@
 module SuitTest(result) where
 
-import OfcCalc (Suit(..), parseSuit)
+import CardParts.Suits ( parseSuit, Suit(..) )
 import Test.HUnit
     ( assertEqual,
       runTestTT,
