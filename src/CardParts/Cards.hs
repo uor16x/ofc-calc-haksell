@@ -19,7 +19,7 @@ __Examples:__
 
 @
 parseCard "2c" = 'Just' 'Two' 'Clubs'
-parseCard "As" = 'Just' 'Ace' 'Spades'
+parseCard \"As\" = 'Just' 'Ace' 'Spades'
 parseCard "22c" = 'Nothing'
 parseCard "5f" = 'Nothing'
 parseCard "2x" = 'Nothing'
