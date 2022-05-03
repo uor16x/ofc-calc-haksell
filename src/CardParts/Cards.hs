@@ -8,7 +8,7 @@ import CardParts.Values ( Value (..), parseValue )
 data Card = Card {
     value :: Value,
     suit :: Suit
-}
+} deriving (Eq, Show)
 
 {- | This method gets a string which represents full card combination (value + suit)
 and returns a 'Card' wrapped with 'Maybe'. The function uses 'parseValue' and 'parseSuit' methods.
@@ -27,9 +27,9 @@ parseCard "2x" = 'Nothing'
 -}
 parseCard :: String -> Maybe Card
 parseCard [] = Nothing
-parseCard full
-    | length full /= 2 = Nothing
+parseCard str
+    | length str /= 2 = Nothing
     | otherwise = do
-        value <- parseValue $ head full
-        suit <- parseSuit $ last full
+        value <- parseValue $ head str
+        suit <- parseSuit $ last str
         return $ Card { value = value, suit = suit }
