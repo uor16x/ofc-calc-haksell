@@ -11,23 +11,23 @@ data Suit = Hearts
     | Spades deriving (Eq, Show, Enum, Bounded)
 
 {- | This method gets a char which represents card suit
-and returns a 'Suit' wrapped with 'Maybe'.
+and returns a 'Suit' wrapped with 'Right'.
 
 Char should be a lowercase symbol from "hdcs" list.
-Otherwise - 'Nothing' returns.
+Otherwise - 'Left' with err msg returns.
 
 __Examples:__
 
 @
-parseSuit \'h\' = 'Just' 'Hearts'
-parseSuit \'c\' = 'Just' 'Clubs'
-parseSuit \'x\' = 'Nothing'
+parseSuit \'h\' = 'Right' 'Hearts'
+parseSuit \'c\' = 'Right' 'Clubs'
+parseSuit \'x\' = 'Left' "There is no card suit marked as 'x'"
 @
 -}
-parseSuit :: Char -> Maybe Suit
+parseSuit :: Char -> Either String Suit
 parseSuit symbol = case symbol `elemIndex` suitSymbols of
-    Nothing -> Nothing
-    Just index -> Just (toEnum index :: Suit)
+    Nothing -> Left $ "There is no card suit marked as " ++ show symbol
+    Just index -> Right (toEnum index :: Suit)
     where
         -- | Just a shortcut for all 'Suit's as a list
         allSuits :: [Suit]
