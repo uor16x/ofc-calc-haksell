@@ -11,25 +11,28 @@ data Card = Card {
 } deriving (Eq, Show)
 
 {- | This method gets a string which represents full card combination (value + suit)
-and returns a 'Card' wrapped with 'Maybe'. The function uses 'parseValue' and 'parseSuit' methods.
+and returns a 'Card' wrapped with 'Right'. The function uses 'parseValue' and 'parseSuit' methods.
 
 Passed string should have length 2 and have format "{VALUE}{SUIT}".
 
 __Examples:__
 
 @
-parseCard "2c" = 'Just' 'Two' 'Clubs'
-parseCard \"As\" = 'Just' 'Ace' 'Spades'
-parseCard "22c" = 'Nothing'
-parseCard "5f" = 'Nothing'
-parseCard "2x" = 'Nothing'
+parseCard "2c" = 'Right' 'Two' 'Clubs'
+parseCard \"As\" = 'Right' 'Ace' 'Spades'
+parseCard "" = 'Left' "Can't process emtpy string"
+parseCard "22c" = 'Left' "Argument length should be 2"
+parseCard "Zd" = 'Left' "There is no broadway card, which could be represented with 'Z'"
+parseCard "5f" = 'Left' "There is no card suit marked as 'f'"
+parseCard "2x" = 'Left' "There is no card suit marked as 'x'"
 @
 -}
 parseCard :: String -> Either String Card
-parseCard [] = Left ""
+parseCard [] = Left "Can't process emtpy string"
 parseCard str
-    | length str /= 2 = Left ""
+    | length str /= 2 = Left "Argument length should be 2"
     | otherwise = do
-        value <- Right $ parseValue $ head str
-        suit <- Right $ parseSuit $ last str
-        return $ Card { value = Ace, suit = Spades }
+        value <- parseValue $ head str
+        suit <- parseSuit $ last str
+        return $ Card { value = value, suit = suit }
+
