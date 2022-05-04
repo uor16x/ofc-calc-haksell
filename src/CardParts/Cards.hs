@@ -22,9 +22,9 @@ parseCard "2c" = 'Right' 'Two' 'Clubs'
 parseCard \"As\" = 'Right' 'Ace' 'Spades'
 parseCard "" = 'Left' "Can't process emtpy string"
 parseCard "22c" = 'Left' "Argument length should be 2"
-parseCard "Zd" = 'Left' "There is no broadway card, which could be represented with 'Z'"
-parseCard "5f" = 'Left' "There is no card suit marked as 'f'"
-parseCard "2x" = 'Left' "There is no card suit marked as 'x'"
+parseCard "Zd" = 'Left' "There is no broadway card, which could be represented with \'Z\'"
+parseCard "5f" = 'Left' "There is no card suit marked as \'f\'"
+parseCard "2x" = 'Left' "There is no card suit marked as \'x\'"
 @
 -}
 parseCard :: String -> Either String Card

@@ -22,43 +22,43 @@ __Examples:__
 
 @
 cards = [
-    "Ah", "Qd", "Kc",
-    "Ts", "Jc", "6h", "2h", "3h",
-    "8c", "4c", "7s", "9c", "Tc"
+    \"Ah\", \"Qd\", \"Kc\",
+    \"Ts\", \"Jc\", "6h", "2h", "3h",
+    "8c", "4c", "7s", "9c", \"Tc\"
 ]
-getUserBoard cards = Right [
+getUserBoard cards = 'Right' [
     [
-        Card {value = Ace, suit = Hearts},
-        Card {value = Queen, suit = Diamonds},
-        Card {value = King, suit = Clubs}
+        'Card' {value = Ace, suit = Hearts},
+        'Card' {value = Queen, suit = Diamonds},
+        'Card' {value = King, suit = Clubs}
     ],
     [
-        Card {value = Ten, suit = Spades},
-        Card {value = Jack, suit = Clubs},
-        Card {value = Six, suit = Hearts},
-        Card {value = Two, suit = Hearts},
-        Card {value = Three, suit = Hearts}
+        'Card' {value = Ten, suit = Spades},
+        'Card' {value = Jack, suit = Clubs},
+        'Card' {value = Six, suit = Hearts},
+        'Card' {value = Two, suit = Hearts},
+        'Card' {value = Three, suit = Hearts}
     ],
     [
-        Card {value = Eight, suit = Clubs},
-        Card {value = Four, suit = Clubs},
-        Card {value = Seven, suit = Spades},
-        Card {value = Nine, suit = Clubs},
-        Card {value = Ten, suit = Clubs}
+        'Card' {value = Eight, suit = Clubs},
+        'Card' {value = Four, suit = Clubs},
+        'Card' {value = Seven, suit = Spades},
+        'Card' {value = Nine, suit = Clubs},
+        'Card' {value = Ten, suit = Clubs}
     ]
 ]
 
 cardsTwo = [
-    "Az", "Qx", "Kf",
-    "Xs", "Jc", "6h", "2h", "3h",
-    "8c", "4c", "7s", "9c", "Tc"
+    \"Az\", \"Qx\", \"Kf\",
+    \"Xs\", \"Jc\", "6h", "2h", "3h",
+    "8c", "4c", "7s", "9c", \"Tc\"
 ]
-getUserBoard cardsTwo = Left
+getUserBoard cardsTwo = 'Left'
     "Some cards failed to be parsed:
-    There is no card suit marked as 'z';
-    There is no card suit marked as 'x';
-    There is no card suit marked as 'f';
-    There is no broadway card, which could be represented with 'X';"
+    There is no card suit marked as \'z\';
+    There is no card suit marked as \'x\';
+    There is no card suit marked as \'f\';
+    There is no broadway card, which could be represented with \'X\';"
 @
 -}
 getUserBoard :: [String] -> Either String Board

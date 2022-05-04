@@ -33,8 +33,8 @@ __Examples:__
 @
 parseValue \'2\' = 'Right' 'Two'
 parseValue \'Q\' = 'Right' 'Queen'
-parseValue \'z\' = 'Left' "There is no broadway card, which could be represented with 'z'"
-parseValue \'1\' = 'Left' "There is no number card with value "
+parseValue \'z\' = 'Left' "There is no broadway card, which could be represented with \'z\'"
+parseValue \'1\' = 'Left' "There is no number card with value 1"
 @
 -}
 parseValue :: Char -> ValueResult
