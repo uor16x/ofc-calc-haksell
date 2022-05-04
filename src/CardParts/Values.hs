@@ -19,6 +19,9 @@ data Value = Two
     | King
     | Ace deriving (Show, Eq, Enum, Ord, Bounded)
 
+-- | Shorthand for 'Value' 'Either' wrapper
+type ValueResult = Either String Value
+
 {- | This method gets a char which represents card value
 and returns a 'Value' wrapped with 'Maybe'.
 
@@ -28,23 +31,24 @@ Otherwise - 'Nothing' returns.
 __Examples:__
 
 @
-parseValue \'2\' = 'Just' 'Two'
-parseValue \'Q\' = 'Just' 'Queen'
-parseValue \'z\' = 'Nothing'
+parseValue \'2\' = 'Right' 'Two'
+parseValue \'Q\' = 'Right' 'Queen'
+parseValue \'z\' = 'Left' "There is no broadway card, which could be represented with 'z'"
+parseValue \'1\' = 'Left' "There is no number card with value "
 @
 -}
-parseValue :: Char -> Maybe Value
+parseValue :: Char -> ValueResult
 parseValue symbol
     | isDigit symbol = getDigitValue . digitToInt $ symbol
     | otherwise = getBroadwayValue symbol
     where
         -- | If digit satisfies the required conditions -
-        -- calculate the index in the 'Value' enum, wrap it with 'Just' and return.
-        -- otherwise - 'Nothing' returns.
-        getDigitValue :: Int -> Maybe Value
+        -- calculate the index in the 'Value' enum, wrap it with 'Right' and return.
+        -- otherwise - 'Left' with err msg returns.
+        getDigitValue :: Int -> ValueResult
         getDigitValue digit
-            | digit > 1 && digit < 10 = Just (toEnum $ digit - 2 :: Value)
-            | otherwise = Nothing
+            | digit > 1 && digit < 10 = Right (toEnum $ digit - 2 :: Value)
+            | otherwise = Left $ "There is no number card with value " ++ show digit
 
         -- | Just a shortcut for all 'Value's as a list
         allValues :: [Value]
@@ -56,9 +60,9 @@ parseValue symbol
         broadwaySymbols = [head . show $ s | s <- take 5 $ reverse allValues]
 
         -- | If given char is present in [AKQJT] list - calc its index in 'Value's enum;
-        -- Then wrap it with 'Just' and return.
-        -- If char is invalid - return 'Nothing'.
-        getBroadwayValue :: Char -> Maybe Value
+        -- Then wrap it with 'Right' and return.
+        -- If char is invalid - return 'Left' with err msg.
+        getBroadwayValue :: Char -> ValueResult
         getBroadwayValue v = case v `elemIndex` broadwaySymbols of
-            Nothing -> Nothing
-            Just index -> Just (toEnum $ length allValues - index - 1 :: Value)
+            Nothing -> Left $ "There is no broadway card, which could be represented with " ++ show v
+            Just index -> Right (toEnum $ length allValues - index - 1 :: Value)

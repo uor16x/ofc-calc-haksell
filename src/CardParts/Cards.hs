@@ -25,11 +25,11 @@ parseCard "5f" = 'Nothing'
 parseCard "2x" = 'Nothing'
 @
 -}
-parseCard :: String -> Maybe Card
-parseCard [] = Nothing
+parseCard :: String -> Either String Card
+parseCard [] = Left ""
 parseCard str
-    | length str /= 2 = Nothing
+    | length str /= 2 = Left ""
     | otherwise = do
-        value <- parseValue $ head str
-        suit <- parseSuit $ last str
-        return $ Card { value = value, suit = suit }
+        value <- Right $ parseValue $ head str
+        suit <- Right $ parseSuit $ last str
+        return $ Card { value = Ace, suit = Spades }
