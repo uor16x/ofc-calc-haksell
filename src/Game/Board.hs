@@ -4,10 +4,12 @@ module Game.Board where
 import CardParts.Cards ( Card (..), parseCard )
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
-import Data.Maybe (isNothing, mapMaybe)
+import Data.Either (isLeft)
+import Data.List (nub)
+import Data.List (elemIndex)
 
--- | Parsed card result wrapper which also holds the string arg
-type CardParseResult = (String, Maybe Card)
+-- | Parsed card result wrapper which also holds the possible err msg
+type CardParseResult = Either String Card
 -- | Shorthand for board type
 type Board = [[Card]]
 
@@ -57,24 +59,37 @@ getUserBoard cardsTwo = Left "Failed to parse: Az; Qx; Kf; Xs;"
 getUserBoard :: [String] -> Either String Board
 getUserBoard full
     | length full /= 13 = Left "List length should be 13"
+    | not $ null boardDuplicates = Left $ "Duplicates ocurred: " ++ boardDuplicates
     | not $ null failedCards = Left failedCardsErrMsg
-    | otherwise = Right $ getLines $ mapMaybe snd parsedCards
+    | otherwise = Right $ getLines [ card | Right card <- parsedCards ]
     where
-        -- | This is the predicate to check whether the parse failed
-        isParseFailed :: (CardParseResult -> Bool)
-        isParseFailed = \(str, strRes) -> isNothing strRes
+        -- | Function which calculates list duplicates
+        getDuplicates :: [String] -> [String]
+        getDuplicates [] = []
+        getDuplicates (x:xs) = case x `elemIndex` xs of
+            Nothing -> getDuplicates xs
+            Just el -> nub $ x : getDuplicates xs
+
+        -- | Shorthand for list duplicates
+        boardDuplicates :: String
+        boardDuplicates = concatMap (++"; ") $ getDuplicates full
+
+        -- | Function which calculates whether list contains duplicates
+        containsDuplicates :: [String] -> Bool
+        containsDuplicates xs = length xs /= length ( nub xs )
 
         -- | Result of list of string card parsing, in form of a tuple
         parsedCards :: [CardParseResult]
-        parsedCards = map (\str -> (str, parseCard str)) full
+        parsedCards = map parseCard full
 
         -- | List of cards failed to being parsed
         failedCards :: [CardParseResult]
-        failedCards = filter isParseFailed parsedCards
+        failedCards = filter isLeft parsedCards
 
         -- | Err message in case of failed cards
         failedCardsErrMsg :: String
-        failedCardsErrMsg = "Failed to parse: " ++ concat [ str ++ "; " | (str, strRes) <- failedCards ]
+        failedCardsErrMsg = "Some cards failed to be parsed: "
+            ++ concat [ errMsg ++ "; " | Left errMsg <- failedCards ]
 
         -- | Get sublist with given number of elements from given starting point
         getSublist :: [a] -> Int -> Int -> [a]
