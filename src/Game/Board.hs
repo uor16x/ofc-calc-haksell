@@ -5,8 +5,7 @@ import CardParts.Cards ( Card (..), parseCard )
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
 import Data.Either (isLeft)
-import Data.List (nub)
-import Data.List (elemIndex)
+import Data.List ( nub, elemIndex )
 
 -- | Parsed card result wrapper which also holds the possible err msg
 type CardParseResult = Either String Card
@@ -17,6 +16,7 @@ type Board = [[Card]]
 Returns 'Either' type, where 'Left' is 'String' with error message,
 and 'Right' is 'Board' type.
 Processes only list of length 13.
+Method is going to fail the list with duplicates.
 
 __Examples:__
 
@@ -53,7 +53,12 @@ cardsTwo = [
     "Xs", "Jc", "6h", "2h", "3h",
     "8c", "4c", "7s", "9c", "Tc"
 ]
-getUserBoard cardsTwo = Left "Failed to parse: Az; Qx; Kf; Xs;"
+getUserBoard cardsTwo = Left
+    "Some cards failed to be parsed:
+    There is no card suit marked as 'z';
+    There is no card suit marked as 'x';
+    There is no card suit marked as 'f';
+    There is no broadway card, which could be represented with 'X';"
 @
 -}
 getUserBoard :: [String] -> Either String Board
