@@ -22,7 +22,7 @@ testData = [
     ( "Should return Q", 'Q', Right Queen ),
     ( "Should return K", 'K', Right King ),
     ( "Should return A", 'A', Right Ace ),
-    ( "Should return Nothing #1", '1', Left "There is no number card with value '1'"),
+    ( "Should return Nothing #1", '1', Left "There is no number card with value 1"),
     ( "Should return Nothing #2", '-',Left "There is no broadway card, which could be represented with '-'" ),
     ( "Should return Nothing #3", 'z', Left "There is no broadway card, which could be represented with 'z'" ),
     ( "Should return Nothing #4", 'k', Left "There is no broadway card, which could be represented with 'k'" )

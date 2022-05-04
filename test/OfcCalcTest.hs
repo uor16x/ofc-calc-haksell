@@ -6,4 +6,4 @@ import qualified ValueTest
 import qualified CardTest
 
 main :: IO Counts
-main = runTestTT $ TestList $ CardTest.result
+main = runTestTT $ TestList $ ValueTest.result ++ SuitTest.result ++ CardTest.result
