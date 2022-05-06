@@ -53,7 +53,8 @@ library
         CardParts.Suits,
         CardParts.Values,
         CardParts.Cards,
-        Game.Board
+        Game.Board,
+        Game.Combination
 
     -- Modules included in this library but not exported.
     -- other-modules:
