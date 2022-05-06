@@ -8,7 +8,13 @@ import CardParts.Values ( Value (..), parseValue )
 data Card = Card {
     value :: Value,
     suit :: Suit
-} deriving (Eq, Show)
+} deriving (Show)
+
+instance Eq Card where
+    c1@Card {} == c2@Card {} = value c1 == value c2
+
+instance Ord Card where
+    c1@Card {} `compare` c2@Card {} = value c1 `compare` value c2
 
 {- | This method gets a string which represents full card combination (value + suit)
 and returns a 'Card' wrapped with 'Right'. The function uses 'parseValue' and 'parseSuit' methods.
