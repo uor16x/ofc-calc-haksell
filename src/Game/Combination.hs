@@ -4,7 +4,7 @@ module Game.Combination(Combination(..), CombinationName(..)) where
 import CardParts.Cards (Card (..))
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
-import Data.List ((\\))
+import Data.List ( (\\), sort )
 
 -- | Names of combinations enum
 data CombinationName = Kicker
@@ -76,14 +76,38 @@ getOccurrences (x:xs) = (x, length xSameValue + 1) : getOccurrences(xs \\ xSameV
     where
         xSameValue = filter (\y -> value x == value y) xs
 
-parsePairHand :: [Card] -> OccurrencesCounter -> Either String Combination
-parsePairHand cards pairs = case length cards of
+parsePartHand :: [Card] -> OccurrencesCounter -> Either String Combination
+parsePartHand cards pairs = case length cards of
     1 -> singlePairHand
     2 -> doublePairsHand
     n -> Left $ "Invalid number of pairs: " ++ show n
     where
         singlePairHand :: Either String Combination
-        singlePairHand = Left ""
+        singlePairHand = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
 
         doublePairsHand :: Either String Combination
-        doublePairsHand = Left ""
+        doublePairsHand = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
+
+parseSequence :: [Card] -> Either String Combination
+parseSequence [] = Left "Can't process empty list"
+parseSequence cards@(x:xs)
+    | length cards/= 5 = Left ""
+    | otherwise = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
+    where
+        sortedCards :: [Card]
+        sortedCards = sort cards
+
+        isWheel :: Bool
+        isWheel = map value sortedCards == [Two, Three, Four, Five, Ace]
+
+        isFlush :: Bool
+        isFlush = all ((== suit x) . suit) xs
+
+        getValueNum :: Int -> Int
+        getValueNum index = fromEnum . value $ sortedCards !! index
+
+        isSequence :: Bool
+        isSequence = all (== 1) [ getValueNum index - getValueNum (index - 1) | index <- [1 .. length sortedCards - 1] ]
+
+
+
