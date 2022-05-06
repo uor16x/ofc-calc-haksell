@@ -8,7 +8,7 @@ import Data.Char ( toLower, isDigit, digitToInt )
 data Suit = Hearts
     | Diamonds
     | Clubs
-    | Spades deriving (Eq, Show, Enum, Bounded)
+    | Spades deriving (Eq, Show, Enum, Bounded, Ord) -- TODO: remove ord after Ord instance implementation for Combinations that requires Suit
 
 {- | This method gets a char which represents card suit
 and returns a 'Suit' wrapped with 'Right'.
