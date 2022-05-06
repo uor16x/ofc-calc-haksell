@@ -48,10 +48,10 @@ instance Ord Combination where
         | otherwise = part1 c1 `compare` part1 c2
     c1 `compare` c2 = name c1 `compare` name c2
 
-parseCombination :: [Card] -> Combination
+parseCombination :: [Card] -> Either String Combination
 parseCombination cards
-    | null pairs = RankCombination { name = RoyalFlush, rank = Card Ace Spades }
-    | otherwise = RankCombination { name = RoyalFlush, rank = Card Ace Spades }
+    | null pairs = parseSequence cards
+    | otherwise = parsePartHand cards pairs
         where
             pairs = [ occ | occ@(card, count) <- getOccurrences cards, count > 1]
 
@@ -90,9 +90,17 @@ parsePartHand cards pairs = case length cards of
 
 parseSequence :: [Card] -> Either String Combination
 parseSequence [] = Left "Can't process empty list"
-parseSequence cards@(x:xs)
-    | length cards/= 5 = Left ""
-    | otherwise = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
+parseSequence cards@(x:xs) = case (isFlush, isSequence, isWheel) of
+    ( False, True, False ) -> Right RankCombination { name = Straight, rank = maxCard }
+    ( False, False, True ) -> Right RankCombination { name = Straight, rank = maxCard }
+    ( True, False, False ) -> Right RankCombination { name = Flush, rank = maxCard }
+    ( True, True, False ) -> case value maxCard of
+        Ace -> Right RankCombination { name = RoyalFlush, rank = maxCard }
+        _ -> Right RankCombination { name = StraightFlush, rank = maxCard }
+    ( True, False, True ) -> Right RankCombination { name = StraightFlush, rank = maxCard }
+    ( False, False, False ) -> Right RankCombination { name = Kicker, rank = maxCard }
+    _ -> Left "Can't parse the combination"
+
     where
         sortedCards :: [Card]
         sortedCards = sort cards
@@ -108,6 +116,11 @@ parseSequence cards@(x:xs)
 
         isSequence :: Bool
         isSequence = all (== 1) [ getValueNum index - getValueNum (index - 1) | index <- [1 .. length sortedCards - 1] ]
+
+        maxCard :: Card
+        maxCard
+            | isWheel = head $ tail sortedCards
+            | otherwise = maximum cards
 
 
 
