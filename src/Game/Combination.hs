@@ -53,7 +53,7 @@ parseCombination cards
     | null pairs = RankCombination { name = RoyalFlush, rank = Card Ace Spades }
     | otherwise = RankCombination { name = RoyalFlush, rank = Card Ace Spades }
         where
-            pairs = [ occ | occ <- getOccurrences cards, count > 1]
+            pairs = [ occ | occ@(card, count) <- getOccurrences cards, count > 1]
 
 type OccurrencesCounter = [(Card, Int)]
 
