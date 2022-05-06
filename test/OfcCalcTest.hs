@@ -1,6 +1,9 @@
 module Main (main) where
 
-import Test.HUnit(runTestTT, Counts, Test (TestList))
+import Test.HUnit
+    ( runTestTT,
+      Counts,
+      runTestTT, Test (TestList) )
 import qualified SuitTest
 import qualified ValueTest
 import qualified CardTest

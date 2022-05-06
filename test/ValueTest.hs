@@ -1,11 +1,8 @@
 module ValueTest(result) where
 
+import TestOps(generateTests)
+import Test.HUnit (Test)
 import CardParts.Values ( parseValue, Value(..) ) 
-import Test.HUnit
-    ( assertEqual,
-      runTestTT,
-      Counts,
-      Test(TestLabel, TestCase) )
 
 testData :: [([Char], Char, Either String Value)]
 testData = [ 
@@ -28,11 +25,5 @@ testData = [
     ( "Should return Nothing #4", 'k', Left "There is no broadway card, which could be represented with 'k'" )
     ]
 
--- TODO: generalize this method
-generateTests :: String -> [Test]
-generateTests method = [ TestLabel name $ TestCase(assertEqual (getDesc arg) expected (parseValue arg)) | (name, arg, expected) <- testData ]
-    where
-        getDesc arg = method ++ " " ++ show arg
-
 result :: [Test]
-result = generateTests "parseValue"
+result = generateTests parseValue "parseValue" testData

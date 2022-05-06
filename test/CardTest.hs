@@ -1,13 +1,10 @@
 module CardTest(result) where
 
+import TestOps(generateTests)
+import Test.HUnit (Test)
 import CardParts.Cards ( parseCard, Card(..) )
 import CardParts.Values ( Value(..) )
 import CardParts.Suits ( Suit(..) )
-import Test.HUnit
-    ( assertEqual,
-      runTestTT,
-      Counts,
-      Test(TestLabel, TestCase) )
 import Data.Char (intToDigit)
 
 {- | Generates a list of tuples.
@@ -55,10 +52,5 @@ testData
         allCards = [ Card { value = v, suit = s } | v <- values, s <- suits ]
         allStrings = [ [v, s] | v <- valueSymbols, s <- suitSymbols ]
 
-generateTests :: String -> [Test]
-generateTests method = [ TestLabel name $ TestCase(assertEqual (getDesc arg) expected (parseCard arg)) | (name, arg, expected) <- testData ]
-    where
-        getDesc arg = method ++ " " ++ show arg
-
 result :: [Test]
-result = generateTests "parseCard"
+result = generateTests parseCard "parseCard" testData

@@ -1,11 +1,8 @@
 module SuitTest(result) where
 
+import TestOps(generateTests)
+import Test.HUnit (Test)
 import CardParts.Suits ( parseSuit, Suit(..) )
-import Test.HUnit
-    ( assertEqual,
-      runTestTT,
-      Counts,
-      Test(TestLabel, TestCase) )
 
 testData :: [([Char], Char, Either String Suit)]
 testData = [
@@ -18,10 +15,5 @@ testData = [
         ("Should return nothing #3", '-', Left "There is no card suit marked as '-'")
     ]
 
-generateTests :: String -> [Test]
-generateTests method = [ TestLabel name $ TestCase(assertEqual (getDesc arg) expected (parseSuit arg)) | (name, arg, expected) <- testData ]
-    where
-        getDesc arg = method ++ " " ++ show arg
-
 result :: [Test]
-result = generateTests "parseSuit"
+result = generateTests parseSuit "parseSuit" testData
