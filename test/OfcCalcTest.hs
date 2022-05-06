@@ -11,8 +11,9 @@ import qualified BoardTest
 import qualified CombinationCmpTest
 
 main :: IO Counts
-main = runTestTT $ TestList $ CombinationCmpTest.result
-    -- ValueTest.result
-    -- ++ SuitTest.result
-    -- ++ CardTest.result
-    -- ++ BoardTest.result
+main = runTestTT $ TestList $
+    ValueTest.result
+    ++ SuitTest.result
+    ++ CardTest.result
+    ++ BoardTest.result
+    ++ CombinationCmpTest.result
