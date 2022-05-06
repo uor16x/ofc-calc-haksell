@@ -7,6 +7,11 @@ import Test.HUnit
 import qualified SuitTest
 import qualified ValueTest
 import qualified CardTest
+import qualified BoardTest
 
 main :: IO Counts
-main = runTestTT $ TestList $ ValueTest.result ++ SuitTest.result ++ CardTest.result
+main = runTestTT $ TestList $
+    ValueTest.result
+    ++ SuitTest.result
+    ++ CardTest.result
+    ++ BoardTest.result
