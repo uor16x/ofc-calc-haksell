@@ -110,7 +110,7 @@ parsePartHand pairs@((yCard, yCount):ys) = case length pairs of
                 multiplePairsSum = sum $ map snd pairs
 
                 sortedPairsByCount :: OccurrencesCounter
-                sortedPairsByCount = sortBy (\(_, a) (_, b) -> a `compare` b) pairs
+                sortedPairsByCount = sortBy (\(_, a) (_, b) -> b `compare` a) pairs
 
 parseSequence :: [Card] -> Either String Combination
 parseSequence [] = Left "Can't process empty list"
