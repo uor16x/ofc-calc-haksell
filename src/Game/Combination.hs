@@ -56,7 +56,7 @@ instance Ord Combination where
 
 parseCombination :: [Card] -> Either String Combination
 parseCombination cards
-    | length cards /= 3 && length cards /= 5 = Left "Invalid line length"
+    | length cards /= 3 && length cards /= 5 = Left $ "Invalid line length: " ++ show(length cards)
     | null pairs = parseSequence cards
     | otherwise = parsePartHand pairs
         where
@@ -132,13 +132,15 @@ parseSequence cards@(x:xs) = case (isFlush, isSequence, isWheel) of
         isWheel = map value sortedCards == [Two, Three, Four, Five, Ace]
 
         isFlush :: Bool
-        isFlush = all ((== suit x) . suit) xs
+        isFlush = length cards == 5
+            && all ((== suit x) . suit) xs
 
         getValueNum :: Int -> Int
         getValueNum index = fromEnum . value $ sortedCards !! index
 
         isSequence :: Bool
-        isSequence = all (== 1) [ getValueNum index - getValueNum (index - 1) | index <- [1 .. length sortedCards - 1] ]
+        isSequence = length cards == 5
+            && all (== 1) [ getValueNum index - getValueNum (index - 1) | index <- [1 .. length sortedCards - 1] ]
 
         maxCard :: Card
         maxCard

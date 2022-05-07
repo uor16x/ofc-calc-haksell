@@ -1,7 +1,7 @@
 module CombinationInnerTest where
 
 import TestOps(generateTests)
-import Game.Combination(Combination(..), CombinationName (..), getOccurrences, parsePartHand, parseSequence)
+import Game.Combination(Combination(..), CombinationName (..), getOccurrences, parsePartHand, parseSequence, parseCombination)
 import Test.HUnit (Test)
 import CardParts.Cards (Card (..))
 import CardParts.Values (Value(..))
@@ -250,6 +250,228 @@ testParseSequence = [
             Card Seven Clubs
         ],
         Right $ RankCombination Kicker $ Card King Diamonds
+    ),
+    (
+        "Kicker #3",
+        [
+            Card Four Diamonds,
+            Card Six Spades,
+            Card Five Hearts
+        ],
+        Right $ RankCombination Kicker $ Card Six Spades
+    ),
+    (
+        "Kicker #4",
+        [
+            Card Four Diamonds,
+            Card Eight Diamonds,
+            Card Five Diamonds
+        ],
+        Right $ RankCombination Kicker $ Card Eight Diamonds
+    ),
+    (
+        "Kicker #5",
+        [
+            Card Four Diamonds,
+            Card Six Diamonds,
+            Card Five Diamonds
+        ],
+        Right $ RankCombination Kicker $ Card Six Diamonds
+    )
+    ]
+
+testParseCombination = [
+    (
+        "Invalid line length #1",
+        [
+            Card Ace Spades,
+            Card King Spades
+        ],
+        Left "Invalid line length: 2"
+    ),
+    (
+        "Kicker #1",
+        [
+            Card Jack Spades,
+            Card King Hearts,
+            Card Ten Diamonds
+        ],
+        Right $ RankCombination Kicker $ Card King Hearts
+    ),
+    (
+        "Kicker #2",
+        [
+            Card Four Spades,
+            Card Three Hearts,
+            Card Two Spades
+        ],
+        Right $ RankCombination Kicker $ Card Four Spades
+    ),
+    (
+        "Kicker #3",
+        [
+            Card Five Spades,
+            Card Six Spades,
+            Card Seven Hearts
+        ],
+        Right $ RankCombination Kicker $ Card Seven Spades
+    ),
+    (
+        "Kicker #4",
+        [
+            Card Five Spades,
+            Card Six Spades,
+            Card Eight Spades
+        ],
+        Right $ RankCombination Kicker $ Card Eight Spades
+    ),
+    (
+        "Kicker #5",
+        [
+            Card Five Spades,
+            Card Six Spades,
+            Card Seven Spades
+        ],
+        Right $ RankCombination Kicker $ Card Seven Spades
+    ),
+    (
+        "Pair #1",
+        [
+            Card Nine Hearts,
+            Card Nine Clubs,
+            Card Ten Spades
+        ],
+        Right $ RankCombination Pair $ Card Nine Hearts
+    ),
+    (
+        "Pair #2",
+        [
+            Card Six Spades,
+            Card Eight Hearts,
+            Card Ace Spades,
+            Card Eight Spades,
+            Card Nine Clubs
+        ],
+        Right $ RankCombination Pair $ Card Eight Hearts
+    ),
+    (
+        "Two Pairs",
+        [
+            Card King Spades,
+            Card Ace Hearts,
+            Card Five Diamonds,
+            Card Five Hearts,
+            Card King Clubs
+        ],
+        Right $ PartCombination TwoPairs (Card King Hearts) (Card Five Diamonds)
+    ),
+    (
+        "Set #1",
+        [
+            Card Jack Spades,
+            Card Jack Diamonds,
+            Card Jack Hearts
+        ],
+        Right $ RankCombination Set $ Card Jack Spades
+    ),
+    (
+        "Set #2",
+        [
+            Card Four Hearts,
+            Card Four Diamonds,
+            Card Six Hearts,
+            Card Seven Spades,
+            Card Four Clubs
+        ],
+        Right $ RankCombination Set $ Card Four Hearts
+    ),
+    (
+        "Straight",
+        [
+            Card Six Spades,
+            Card Seven Spades,
+            Card Eight Clubs,
+            Card Nine Diamonds,
+            Card Ten Hearts
+        ],
+        Right $ RankCombination Straight $ Card Ten Hearts
+    ),
+    (
+        "Wheel",
+        [
+            Card Two Clubs,
+            Card Three Hearts,
+            Card Five Spades,
+            Card Ace Hearts,
+            Card Four Diamonds
+        ],
+        Right $ RankCombination Straight $ Card Five Spades
+    ),
+    (
+        "Flush",
+        [
+            Card Two Clubs,
+            Card Four Clubs,
+            Card Seven Clubs,
+            Card Queen Clubs,
+            Card Jack Clubs
+        ],
+        Right $ RankCombination Flush $ Card Queen Clubs
+    ),
+    (
+        "Full House",
+        [
+            Card Seven Clubs,
+            Card Seven Spades,
+            Card Five Hearts,
+            Card Five Clubs,
+            Card Seven Hearts
+        ],
+        Right $ PartCombination FullHouse (Card Seven Clubs) (Card Five Hearts)
+    ),
+    (
+        "Four of a kind",
+        [
+            Card Nine Hearts,
+            Card Nine Diamonds,
+            Card Ace Spades,
+            Card Nine Clubs,
+            Card Nine Spades
+        ],
+        Right $ RankCombination FourOfAKind $ Card Nine Hearts
+    ),
+    (
+        "Straight flush",
+        [
+            Card Seven Spades,
+            Card Eight Spades,
+            Card Jack Spades,
+            Card Ten Spades,
+            Card Nine Spades
+        ],
+        Right $ RankCombination StraightFlush $ Card Jack Spades
+    ),
+    (
+        "Straight flush - wheel",
+        [
+            Card Ace Diamonds,
+            Card Four Diamonds,
+            Card Two Diamonds,
+            Card Three Diamonds,
+            Card Five Diamonds
+        ],
+        Right $ RankCombination StraightFlush $ Card Five Diamonds
+    ),
+    (
+        "Royal flush",
+        [
+            Card Ten Spades,
+            Card Jack Spades,
+            Card Ace Spades,
+            Card Queen Spades,
+            Card King Spades
+        ],
+        Right $ RankCombination RoyalFlush $ Card Ace Spades
     )
     ]
 
@@ -269,4 +491,9 @@ result =
     parseSequence
     "parseSequence"
     testParseSequence
+    ++
+    generateTests
+    parseCombination
+    "parseCombination"
+    testParseCombination
 
