@@ -77,13 +77,19 @@ getOccurrences (x:xs) = (x, length xSameValue + 1) : getOccurrences(xs \\ xSameV
         xSameValue = filter (\y -> value x == value y) xs
 
 parsePartHand :: [Card] -> OccurrencesCounter -> Either String Combination
-parsePartHand cards pairs = case length cards of
+parsePartHand [] _ = Left "Can't process empty cards array"
+parsePartHand _ [] = Left "Can't process empty pairs array"
+parsePartHand cards@(x:xs) pairs@((yCard, yCount):ys) = case length cards of
     1 -> singlePairHand
     2 -> doublePairsHand
     n -> Left $ "Invalid number of pairs: " ++ show n
     where
         singlePairHand :: Either String Combination
-        singlePairHand = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
+        singlePairHand = case yCount of
+            4 -> Right $ RankCombination FourOfAKind yCard
+            3 -> Right $ RankCombination Set yCard
+            2 -> Right $ RankCombination Pair yCard
+            _ -> Left "Found invalid number of pairs"
 
         doublePairsHand :: Either String Combination
         doublePairsHand = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
@@ -91,14 +97,14 @@ parsePartHand cards pairs = case length cards of
 parseSequence :: [Card] -> Either String Combination
 parseSequence [] = Left "Can't process empty list"
 parseSequence cards@(x:xs) = case (isFlush, isSequence, isWheel) of
-    ( False, True, False ) -> Right RankCombination { name = Straight, rank = maxCard }
-    ( False, False, True ) -> Right RankCombination { name = Straight, rank = maxCard }
-    ( True, False, False ) -> Right RankCombination { name = Flush, rank = maxCard }
+    ( False, True, False ) -> Right $ RankCombination Straight maxCard
+    ( False, False, True ) -> Right $ RankCombination Straight maxCard
+    ( True, False, False ) -> Right $ RankCombination Flush maxCard
     ( True, True, False ) -> case value maxCard of
-        Ace -> Right RankCombination { name = RoyalFlush, rank = maxCard }
-        _ -> Right RankCombination { name = StraightFlush, rank = maxCard }
-    ( True, False, True ) -> Right RankCombination { name = StraightFlush, rank = maxCard }
-    ( False, False, False ) -> Right RankCombination { name = Kicker, rank = maxCard }
+        Ace -> Right $ RankCombination RoyalFlush maxCard
+        _ -> Right $ RankCombination StraightFlush maxCard  
+    ( True, False, True ) -> Right $ RankCombination StraightFlush maxCard
+    ( False, False, False ) -> Right $ RankCombination Kicker maxCard
     _ -> Left "Can't parse the combination"
 
     where
