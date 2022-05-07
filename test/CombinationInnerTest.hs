@@ -1,7 +1,7 @@
 module CombinationInnerTest where
 
 import TestOps(generateTests)
-import Game.Combination(Combination(..), CombinationName (..), getOccurrences, parsePartHand)
+import Game.Combination(Combination(..), CombinationName (..), getOccurrences, parsePartHand, parseSequence)
 import Test.HUnit (Test)
 import CardParts.Cards (Card (..))
 import CardParts.Values (Value(..))
@@ -158,6 +158,101 @@ testParsePartHand = [
     )
     ]
 
+testParseSequence :: [(String, [Card], Either String Combination)]
+testParseSequence = [
+    (
+        "Empty list",
+        [],
+        Left "Can't process empty list"
+    ),
+    (
+        "Straight",
+        [
+            Card Four Spades,
+            Card Five Spades,
+            Card Six Clubs,
+            Card Seven Diamonds,
+            Card Eight Hearts
+        ],
+        Right $ RankCombination Straight $ Card Eight Hearts
+    ),
+    (
+        "Wheel",
+        [
+            Card Two Diamonds,
+            Card Three Spades,
+            Card Five Spades,
+            Card Ace Diamonds,
+            Card Four Clubs
+        ],
+        Right $ RankCombination Straight $ Card Five Spades
+    ),
+    (
+        "Flush",
+        [
+            Card Four Spades,
+            Card Seven Spades,
+            Card Nine Spades,
+            Card Jack Spades,
+            Card King Spades
+        ],
+        Right $ RankCombination Flush $ Card King Spades
+    ),
+    (
+        "Straight flush",
+        [
+            Card Four Spades,
+            Card Five Spades,
+            Card Six Spades,
+            Card Seven Spades,
+            Card Eight Spades
+        ],
+        Right $ RankCombination StraightFlush $ Card Eight Spades
+    ),
+    (
+        "Royal flush",
+        [
+            Card Ten Hearts,
+            Card Jack Hearts,
+            Card Queen Hearts,
+            Card King Hearts,
+            Card Ace Hearts
+        ],
+        Right $ RankCombination RoyalFlush $ Card Ace Hearts
+    ),
+    (
+        "Straight flush - wheel",
+        [
+            Card Ace Diamonds,
+            Card Four Diamonds,
+            Card Two Diamonds,
+            Card Three Diamonds,
+            Card Five Diamonds
+        ],
+        Right $ RankCombination StraightFlush $ Card Five Diamonds
+    ),
+    (
+        "Kicker #1",
+        [
+            Card Ten Diamonds,
+            Card Six Spades,
+            Card Five Hearts
+        ],
+        Right $ RankCombination Kicker $ Card Ten Diamonds
+    ),
+    (
+        "Kicker #2",
+        [
+            Card King Diamonds,
+            Card Eight Spades,
+            Card Two Hearts,
+            Card Six Clubs,
+            Card Seven Clubs
+        ],
+        Right $ RankCombination Kicker $ Card King Diamonds
+    )
+    ]
+
 result :: [Test]
 result =
     generateTests
@@ -169,5 +264,9 @@ result =
     parsePartHand
     "parsePartHand"
     testParsePartHand
-
+    ++
+    generateTests
+    parseSequence
+    "parseSequence"
+    testParseSequence
 

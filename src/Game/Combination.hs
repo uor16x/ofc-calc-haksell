@@ -142,7 +142,7 @@ parseSequence cards@(x:xs) = case (isFlush, isSequence, isWheel) of
 
         maxCard :: Card
         maxCard
-            | isWheel = head $ tail sortedCards
+            | isWheel = last $ init sortedCards
             | otherwise = maximum cards
 
 
