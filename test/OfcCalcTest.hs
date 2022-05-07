@@ -9,6 +9,7 @@ import qualified ValueTest
 import qualified CardTest
 import qualified BoardTest
 import qualified CombinationCmpTest
+import qualified CombinationInnerTest
 
 main :: IO Counts
 main = runTestTT $ TestList $
@@ -17,3 +18,4 @@ main = runTestTT $ TestList $
     ++ CardTest.result
     ++ BoardTest.result
     ++ CombinationCmpTest.result
+    ++ CombinationInnerTest.result

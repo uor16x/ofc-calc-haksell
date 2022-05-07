@@ -1,11 +1,16 @@
 -- | Poker combination and its processing methods
-module Game.Combination(Combination(..), CombinationName(..)) where
+module Game.Combination(
+    Combination(..),
+    getOccurrences,
+    parseSequence,
+    parsePartHand,
+    parseCombination,
+    CombinationName(..)) where
 
 import CardParts.Cards (Card (..))
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
-import Data.List ( (\\), sort )
-import Data.List (sortBy)
+import Data.List ( (\\), sort, sortBy )
 
 -- | Names of combinations enum
 data CombinationName = Kicker
@@ -55,12 +60,15 @@ parseCombination cards
     | null pairs = parseSequence cards
     | otherwise = parsePartHand pairs
         where
-            pairs = [ occ | occ@(card, count) <- getOccurrences cards, count > 1]
+            pairs = [ occ | occ@(card, count) <- getOccurrences cards, count > 1 ]
 
 type OccurrencesCounter = [(Card, Int)]
 
 {- | This function gets a list of cards and returns a list of tuples.
-First element of which contains certain card, and second element contains number of occurences
+First element of which contains certain card, and second element contains number of occurences.
+
+Function takes the head of the list and search for occurrences of its card in the tail.
+Then, recursively calls itself for tail with that card removed from it.
 
 __Examples:__
 
@@ -94,7 +102,7 @@ parsePartHand pairs@((yCard, yCount):ys) = case length pairs of
 
         multiplePairsHand :: Either String Combination
         multiplePairsHand = case multiplePairsSum of
-            4 -> Right $ PartCombination TwoPairs (maximum $ map fst pairs) (minimum $ map fst pairs)
+            4 -> Right $ PartCombination TwoPairs(maximum $ map fst pairs) (minimum $ map fst pairs)
             5 -> Right $ PartCombination FullHouse (fst . head $ sortedPairsByCount) (fst . last $ sortedPairsByCount)
             _ -> Left "Invalid multiple pairs sum: "
             where
@@ -116,7 +124,6 @@ parseSequence cards@(x:xs) = case (isFlush, isSequence, isWheel) of
     ( True, False, True ) -> Right $ RankCombination StraightFlush maxCard
     ( False, False, False ) -> Right $ RankCombination Kicker maxCard
     _ -> Left "Can't parse the combination"
-
     where
         sortedCards :: [Card]
         sortedCards = sort cards
