@@ -5,6 +5,7 @@ import CardParts.Cards (Card (..))
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
 import Data.List ( (\\), sort )
+import Data.List (sortBy)
 
 -- | Names of combinations enum
 data CombinationName = Kicker
@@ -50,8 +51,9 @@ instance Ord Combination where
 
 parseCombination :: [Card] -> Either String Combination
 parseCombination cards
+    | length cards /= 3 && length cards /= 5 = Left "Invalid line length"
     | null pairs = parseSequence cards
-    | otherwise = parsePartHand cards pairs
+    | otherwise = parsePartHand pairs
         where
             pairs = [ occ | occ@(card, count) <- getOccurrences cards, count > 1]
 
@@ -76,12 +78,11 @@ getOccurrences (x:xs) = (x, length xSameValue + 1) : getOccurrences(xs \\ xSameV
     where
         xSameValue = filter (\y -> value x == value y) xs
 
-parsePartHand :: [Card] -> OccurrencesCounter -> Either String Combination
-parsePartHand [] _ = Left "Can't process empty cards array"
-parsePartHand _ [] = Left "Can't process empty pairs array"
-parsePartHand cards@(x:xs) pairs@((yCard, yCount):ys) = case length cards of
+parsePartHand :: OccurrencesCounter -> Either String Combination
+parsePartHand [] = Left "Can't process empty pairs array"
+parsePartHand pairs@((yCard, yCount):ys) = case length pairs of
     1 -> singlePairHand
-    2 -> doublePairsHand
+    2 -> multiplePairsHand
     n -> Left $ "Invalid number of pairs: " ++ show n
     where
         singlePairHand :: Either String Combination
@@ -91,8 +92,17 @@ parsePartHand cards@(x:xs) pairs@((yCard, yCount):ys) = case length cards of
             2 -> Right $ RankCombination Pair yCard
             _ -> Left "Found invalid number of pairs"
 
-        doublePairsHand :: Either String Combination
-        doublePairsHand = Right RankCombination { name = RoyalFlush, rank = Card Ace Spades }
+        multiplePairsHand :: Either String Combination
+        multiplePairsHand = case multiplePairsSum of
+            4 -> Right $ PartCombination TwoPairs (maximum $ map fst pairs) (minimum $ map fst pairs)
+            5 -> Right $ PartCombination FullHouse (fst . head $ sortedPairsByCount) (fst . last $ sortedPairsByCount)
+            _ -> Left "Invalid multiple pairs sum: "
+            where
+                multiplePairsSum :: Int
+                multiplePairsSum = sum $ map snd pairs
+
+                sortedPairsByCount :: OccurrencesCounter
+                sortedPairsByCount = sortBy (\(_, a) (_, b) -> a `compare` b) pairs
 
 parseSequence :: [Card] -> Either String Combination
 parseSequence [] = Left "Can't process empty list"
@@ -102,7 +112,7 @@ parseSequence cards@(x:xs) = case (isFlush, isSequence, isWheel) of
     ( True, False, False ) -> Right $ RankCombination Flush maxCard
     ( True, True, False ) -> case value maxCard of
         Ace -> Right $ RankCombination RoyalFlush maxCard
-        _ -> Right $ RankCombination StraightFlush maxCard  
+        _ -> Right $ RankCombination StraightFlush maxCard
     ( True, False, True ) -> Right $ RankCombination StraightFlush maxCard
     ( False, False, False ) -> Right $ RankCombination Kicker maxCard
     _ -> Left "Can't parse the combination"
