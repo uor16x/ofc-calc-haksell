@@ -98,13 +98,13 @@ parsePartHand pairs@((yCard, yCount):ys) = case length pairs of
             4 -> Right $ RankCombination FourOfAKind yCard
             3 -> Right $ RankCombination Set yCard
             2 -> Right $ RankCombination Pair yCard
-            _ -> Left "Found invalid number of pairs"
+            _ -> Left $ "Single pair hand: found invalid number of pairs: " ++ show yCount
 
         multiplePairsHand :: Either String Combination
         multiplePairsHand = case multiplePairsSum of
             4 -> Right $ PartCombination TwoPairs(maximum $ map fst pairs) (minimum $ map fst pairs)
             5 -> Right $ PartCombination FullHouse (fst . head $ sortedPairsByCount) (fst . last $ sortedPairsByCount)
-            _ -> Left "Invalid multiple pairs sum: "
+            _ -> Left $ "Invalid multiple pairs sum: " ++ show multiplePairsSum
             where
                 multiplePairsSum :: Int
                 multiplePairsSum = sum $ map snd pairs
