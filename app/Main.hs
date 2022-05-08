@@ -11,12 +11,12 @@ import CardParts.Cards (Card(..))
 
 data Input = InitialInput { username :: String, strs :: [String] }
     | BoardInput { username :: String, board :: [[Card]] }
-    | CombinationInput { username :: String, combinations :: [Combination] } deriving Show
+    | CombinationInput { username :: String, scoop :: Bool, combinations :: [Combination] } deriving Show
 
 main :: IO ()
 main = do
     args <- getArgs
-    progName <- getProgName 
+    progName <- getProgName
     case length args of
         2 -> case head args of
             "parse" -> case parse (args !! 1) of
@@ -47,9 +47,13 @@ parseBoard :: Input -> Either String Input
 parseBoard BoardInput { username = username, board = board } = case parsedCombinations of
     Right result -> Right $ CombinationInput {
         username = username,
-        combinations = result
+        combinations = result,
+        scoop = isScoop result
     }
     Left msg -> Left $ "Parsing of combinations failed: " ++ msg
     where
         parsedCombinations = mapM parseCombination board
+        isScoop combinations =
+            head combinations > head (tail combinations)
+            || head (tail combinations) > last combinations
 parseBoard _ = Left "Valid BoardInput should be passed here"
