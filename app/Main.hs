@@ -16,13 +16,20 @@ data Input = InitialInput { username :: String, strs :: [String] }
 main :: IO ()
 main = do
     args <- getArgs
-    progName <- getProgName
+    progName <- getProgName 
     case length args of
-        2 -> print "Process"
+        2 -> case head args of
+            "parse" -> case parse (args !! 1) of
+                Right parseResult -> print parseResult
+                Left msg -> error msg
+            "calc" -> print "calc"
+            _ -> error "First argument should be parse | calc"
         _ -> error "Invalid number of arguments"
-    print $ head args
-    print $ args !! 1
-    print $ parseInput $ args !! 1
+
+parse :: String -> Either String [Input]
+parse userInput = do
+    board <- mapM parseInputCards $ parseInput userInput
+    mapM parseBoard board
 
 parseInput :: String -> [Input]
 parseInput args = map (uncurry InitialInput) (read args :: [(String, [String])])
