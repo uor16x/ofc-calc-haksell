@@ -1,4 +1,4 @@
-module Game.Calc where
+module Game.Calc() where
 import CardParts.Cards (Card(..))
 import Game.Combination
     ( Combination,
@@ -23,17 +23,29 @@ data LineResult = LineResult {
 
 data PlayerCalculations = PlayerCalculations {
     player :: PlayerInput,
-    top :: LineResult,
-    middle :: LineResult,
-    bottom :: LineResult
+    scoop :: Bool,
+    top :: Maybe LineResult,
+    middle :: Maybe LineResult,
+    bottom :: Maybe LineResult
 }
 
-calc :: PlayerInput -> PlayerCalculations
-calc input@PlayerInput{ board = board } = PlayerCalculations {
+calcPlayer :: PlayerInput -> PlayerCalculations
+calcPlayer input@PlayerInput{ board = (top:middle:bottom:xs) } = PlayerCalculations {
     player = input,
-    top = getLineResult Top (head board),
-    middle = getLineResult Top (head $ tail board),
-    bottom = getLineResult Top (last board)
+    scoop = isScoopped,
+    top = if isScoopped then Nothing else Just (getLineResult Top top),
+    middle = if isScoopped then Nothing else Just (getLineResult Middle middle),
+    bottom = if isScoopped then Nothing else Just (getLineResult Top top)
+} where
+    -- | Define whether the user scooped
+    isScoopped :: Bool
+    isScoopped = top > middle || middle > bottom
+calcPlayer input@PlayerInput { board = _ } = PlayerCalculations{
+    player = input,
+    scoop = False,
+    top = Nothing,
+    middle = Nothing,
+    bottom = Nothing
 }
 
 getLineResult :: LineType -> Combination -> LineResult
