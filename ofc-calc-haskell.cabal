@@ -63,7 +63,7 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.14.3.0, HUnit
+    build-depends:    base ^>=4.14.3.0, HUnit, aeson
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -85,6 +85,7 @@ executable ofc-calc-haskell
     build-depends:
         base ^>=4.14.3.0,
         HUnit,
+        aeson,
         ofc-calc-haskell
 
     -- Directories containing source files.

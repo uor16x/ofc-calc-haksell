@@ -1,14 +1,32 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- | Combined (value + suit) card data type and its processing methods
 module CardParts.Cards where
 
 import CardParts.Suits ( Suit (..), parseSuit )
 import CardParts.Values ( Value (..), parseValue )
+import GHC.Generics (Generic)
+import Data.Aeson
+    ( FromJSON(parseJSON),
+      Object,
+      (.:),
+      ToJSON(toJSON),
+      object,
+      KeyValue((.=)) )
+import qualified Data.Aeson as JsonValue(Value (Object))
+import Data.Aeson.Key (fromString)
 
 -- | This type represents a card - combination of suit and value.
 data Card = Card {
     value :: Value,
     suit :: Suit
-} deriving (Show)
+} deriving (Show, Generic)
+
+instance FromJSON Card where
+    parseJSON (JsonValue.Object v) = Card <$> v .: fromString "value" <*> v .: fromString "suit"
+    parseJSON _ = mempty
+
+instance ToJSON Card where
+    toJSON (Card value suit) = object [fromString "value" .= value, fromString "suit" .= suit]
 
 instance Eq Card where
     c1@Card {} == c2@Card {} = value c1 == value c2

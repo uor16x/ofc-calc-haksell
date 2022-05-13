@@ -1,14 +1,21 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- | Card suit data type and its processing methods
 module CardParts.Suits(Suit(..), parseSuit) where
 
 import Data.List (elemIndex)
 import Data.Char ( toLower, isDigit, digitToInt )
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON)
+import Data.Aeson.Types (ToJSON)
 
 -- | This type represents card suit.
 data Suit = Hearts
     | Diamonds
     | Clubs
-    | Spades deriving (Eq, Show, Enum, Bounded, Ord) -- TODO: remove ord after Ord instance implementation for Combinations that requires Suit
+    | Spades deriving (Eq, Show, Enum, Bounded, Generic)
+
+instance FromJSON Suit
+instance ToJSON Suit
 
 {- | This method gets a char which represents card suit
 and returns a 'Suit' wrapped with 'Right'.

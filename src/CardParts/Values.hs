@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- | Card value data type and its processing methods
 module CardParts.Values(Value(..), parseValue) where
 
 import Data.List (elemIndex)
 import Data.Char ( toLower, isDigit, digitToInt )
+import GHC.Generics (Generic)
+import Data.Aeson (ToJSON, FromJSON)
 
 -- | This type represents card value.
 data Value = Two
@@ -17,7 +20,10 @@ data Value = Two
     | Jack
     | Queen
     | King
-    | Ace deriving (Show, Eq, Enum, Ord, Bounded)
+    | Ace deriving (Show, Eq, Enum, Ord, Bounded, Generic)
+
+instance FromJSON Value
+instance ToJSON Value
 
 -- | Shorthand for 'Value' 'Either' wrapper
 type ValueResult = Either String Value

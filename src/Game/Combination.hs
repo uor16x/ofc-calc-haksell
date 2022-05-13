@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- | Poker combination and its processing methods
 module Game.Combination(
     Combination(..),
@@ -11,6 +12,8 @@ import CardParts.Cards (Card (..))
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
 import Data.List ( (\\), sort, sortBy )
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, ToJSON)
 
 -- | Names of combinations enum
 data CombinationName = Kicker
@@ -22,7 +25,10 @@ data CombinationName = Kicker
     | FullHouse
     | FourOfAKind
     | StraightFlush
-    | RoyalFlush deriving (Show, Eq, Ord, Bounded, Enum)
+    | RoyalFlush deriving (Show, Eq, Ord, Bounded, Enum, Generic)
+
+instance FromJSON CombinationName
+instance ToJSON CombinationName
 
 -- | This type represents a poker combination.
 -- | It is divided by two constructors: for simple combinations (pair, set etc.)
@@ -35,7 +41,10 @@ data Combination =
         name :: CombinationName,
         part1 :: Card,
         part2 :: Card
-    } deriving (Show)
+    } deriving (Show, Generic)
+
+instance FromJSON Combination
+instance ToJSON Combination
 
 {- | Description of 'Eq' class for 'Combination'.
 
