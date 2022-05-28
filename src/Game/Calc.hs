@@ -23,7 +23,6 @@ data LineResult = LineResult {
 
 data PlayerCalculations = PlayerCalculations {
     player :: PlayerInput,
-    scoop :: Bool,
     top :: Maybe LineResult,
     middle :: Maybe LineResult,
     bottom :: Maybe LineResult
@@ -32,7 +31,6 @@ data PlayerCalculations = PlayerCalculations {
 calcPlayer :: PlayerInput -> PlayerCalculations
 calcPlayer input@PlayerInput{ board = (top:middle:bottom:xs) } = PlayerCalculations {
     player = input,
-    scoop = isScoopped,
     top = if isScoopped then Nothing else Just (getLineResult Top top),
     middle = if isScoopped then Nothing else Just (getLineResult Middle middle),
     bottom = if isScoopped then Nothing else Just (getLineResult Top top)
@@ -42,7 +40,6 @@ calcPlayer input@PlayerInput{ board = (top:middle:bottom:xs) } = PlayerCalculati
     isScoopped = top > middle || middle > bottom
 calcPlayer input@PlayerInput { board = _ } = PlayerCalculations{
     player = input,
-    scoop = False,
     top = Nothing,
     middle = Nothing,
     bottom = Nothing
