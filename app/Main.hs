@@ -9,6 +9,8 @@ import Data.Either (isLeft)
 import CardParts.Cards (Card(..))
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON, encode)
+import qualified Game.Calc (calcPlayer, PlayerInput (..), PlayerCalculations(..))
+import Game.Calc (PlayerInput(PlayerInput))
 
 data Input = InitialInput { username :: String, strs :: [String] }
     | BoardInput { username :: String, board :: [[Card]] }
@@ -27,10 +29,16 @@ main = do
                 Left msg -> error msg
         _ -> error "Invalid number of arguments"
 
-parse :: String -> Either String [Input]
+parse :: String -> Either String [Game.Calc.PlayerCalculations]
 parse userInput = do
     board <- mapM parseInputCards $ parseInput userInput
-    mapM parseBoard board
+    parsedBoard <- mapM parseBoard board
+    mapM calcBoard parsedBoard
+      where
+        calcBoard :: Input -> Either String Game.Calc.PlayerCalculations
+        calcBoard inp = Right $
+          Game.Calc.calcPlayer (Game.Calc.PlayerInput (username inp) (combinations inp))
+
 
 parseInput :: String -> [Input]
 parseInput args = map (uncurry InitialInput) (read args :: [(String, [String])])

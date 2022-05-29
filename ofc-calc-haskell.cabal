@@ -54,7 +54,8 @@ library
         CardParts.Values,
         CardParts.Cards,
         Game.Board,
-        Game.Combination
+        Game.Combination,
+        Game.Calc
 
     -- Modules included in this library but not exported.
     -- other-modules:

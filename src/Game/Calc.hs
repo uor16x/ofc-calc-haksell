@@ -1,4 +1,5 @@
-module Game.Calc() where
+{-# LANGUAGE DeriveGeneric #-}
+module Game.Calc(calcPlayer, PlayerInput(..), LineResult, LineType(..), PlayerCalculations(..)) where
 import CardParts.Cards (Card(..))
 import Game.Combination
     ( Combination,
@@ -7,43 +8,49 @@ import Game.Combination
       Combination(..) )
 import CardParts.Values (Value(..))
 import CardParts.Suits (Suit(..))
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, ToJSON)
 
 data PlayerInput = PlayerInput {
     username :: String,
     board :: [Combination]
-}
+} deriving (Show, Generic)
 
-data LineType = Top | Middle | Bottom
+instance FromJSON PlayerInput
+instance ToJSON PlayerInput
+
+data LineType = Top | Middle | Bottom deriving (Show, Generic)
+
+instance FromJSON LineType
+instance ToJSON LineType
 
 data LineResult = LineResult {
     lineType :: LineType,
     combination :: Combination,
     points :: Int
-}
+} deriving (Show, Generic)
+
+instance FromJSON LineResult
+instance ToJSON LineResult
 
 data PlayerCalculations = PlayerCalculations {
     player :: PlayerInput,
-    top :: Maybe LineResult,
-    middle :: Maybe LineResult,
-    bottom :: Maybe LineResult
-}
+    top :: LineResult,
+    middle :: LineResult,
+    bottom :: LineResult
+} deriving (Generic)
+
+instance FromJSON PlayerCalculations
+instance ToJSON PlayerCalculations
 
 calcPlayer :: PlayerInput -> PlayerCalculations
 calcPlayer input@PlayerInput{ board = (top:middle:bottom:xs) } = PlayerCalculations {
     player = input,
-    top = if isScoopped then Nothing else Just (getLineResult Top top),
-    middle = if isScoopped then Nothing else Just (getLineResult Middle middle),
-    bottom = if isScoopped then Nothing else Just (getLineResult Top top)
-} where
-    -- | Define whether the user scooped
-    isScoopped :: Bool
-    isScoopped = top > middle || middle > bottom
-calcPlayer input@PlayerInput { board = _ } = PlayerCalculations{
-    player = input,
-    top = Nothing,
-    middle = Nothing,
-    bottom = Nothing
+    top = getLineResult Top top,
+    middle = getLineResult Middle middle,
+    bottom = getLineResult Bottom bottom
 }
+calcPlayer _ = error "Invalid usage of calcPlayer"
 
 getLineResult :: LineType -> Combination -> LineResult
 getLineResult lineType combination = LineResult {
