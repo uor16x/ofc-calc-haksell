@@ -10,7 +10,7 @@ import CardParts.Cards (Card(..))
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON, encode)
 import qualified Game.Calc (calcPlayer, PlayerInput (..), PlayerCalculations(..))
-import Game.Calc (PlayerInput(PlayerInput))
+import Game.Calc ( PlayerInput(PlayerInput), comparePairOfPlayers, updateTotals )
 
 data Input = InitialInput { username :: String, strs :: [String] }
     | BoardInput { username :: String, board :: [[Card]] }
@@ -33,11 +33,32 @@ parse :: String -> Either String [Game.Calc.PlayerCalculations]
 parse userInput = do
     board <- mapM parseInputCards $ parseInput userInput
     parsedBoard <- mapM parseBoard board
-    mapM calcBoard parsedBoard
+    playersCalculated <- mapM calcBoard parsedBoard
+    Right $ calcUsers $ calcSteps playersCalculated
       where
         calcBoard :: Input -> Either String Game.Calc.PlayerCalculations
         calcBoard inp = Right $
           Game.Calc.calcPlayer (Game.Calc.PlayerInput (username inp) (combinations inp))
+
+        calcSteps :: [Game.Calc.PlayerCalculations] -> [(Game.Calc.PlayerCalculations, Game.Calc.PlayerCalculations)]
+        calcSteps (p1:p2:p3:_) = [
+            comparePairOfPlayers(p1, p2),
+            comparePairOfPlayers(p2, p3),
+            comparePairOfPlayers(p3, p1)
+          ]
+        calcSteps _ = error "Wrong size of calcSteps input array"
+
+        calcUsers :: [(Game.Calc.PlayerCalculations, Game.Calc.PlayerCalculations)] -> [Game.Calc.PlayerCalculations]
+        calcUsers ((p1r1, p2r1) : (p2r2, p3r1) : (p3r2, p1r2) : _) = [
+          updateTotals p1r1 p1r2,
+          updateTotals p2r1 p2r2,
+          updateTotals p3r1 p3r2
+         ]
+        calcUsers _ = error "Wrong size of calcUsers input array"
+
+        firstUserResult p1 p2 p3 = comparePairOfPlayers (fst $ comparePairOfPlayers (p1, p2), p3)
+        secondUserResult p1 p2 p3 = comparePairOfPlayers (snd $ comparePairOfPlayers (p1, p2), snd $ firstUserResult p1 p2 p3)
+        thirdUserResult p1 p2 p3 = comparePairOfPlayers (fst $ firstUserResult p1 p2 p3, snd $ secondUserResult p1 p2 p3)
 
 
 parseInput :: String -> [Input]
