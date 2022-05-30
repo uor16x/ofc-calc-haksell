@@ -86,9 +86,9 @@ updateTotals prevResult nextResult = prevResult {
 
 -- collectCompares :: [([String], Int, Int)] -> [PlayerInput] -> [(String, Int, Int)]
 -- collectCompares :: (String, (t String, b, c)) -> [PlayerInput] -> (String, [([String], Int, Int, [(Int, Int)])])
-collectCompares :: [([String], Int, Int, [(Int, Int)])] -> [PlayerInput] -> [(String, [([String], Int, Int, [(Int, Int)])])]
-collectCompares acc full@(currPlayer:players) =
-  (username currPlayer, map (getResult currPlayer) otherInputs) : collectCompares (acc ++ map (getResult currPlayer) otherInputs) players
+collectCompares :: [([String], Int, Int, [(Int, Int)])] -> [PlayerInput] -> [PlayerInput] -> [(String, [([String], Int, Int, [(Int, Int)])])]
+collectCompares acc full (currPlayer:players) =
+  (username currPlayer, map (getResult currPlayer) otherInputs) : collectCompares (acc ++ map (getResult currPlayer) otherInputs) full players
     where
       otherInputs = filter (\player -> username player /= username currPlayer) full
 
@@ -96,10 +96,10 @@ collectCompares acc full@(currPlayer:players) =
       negateTuple (a, b) = (negate a, negate b)
 
       getResult :: PlayerInput -> PlayerInput -> ([String], Int, Int, [(Int, Int)])
-      getResult player1 player2 = case find (\(usernames, _, _, _) -> username player1 `elem` usernames && username player2 `elem` usernames ) acc of
+      getResult player1 player2 = case find (\(usernames, _, _, _) -> usernames == [username player2, username player2] ) acc of
         Just (usernames, combo, bonus, debug) -> (reverse usernames, negate combo, negate bonus, map negateTuple debug)
-        Nothing -> comparePlayers player1 player2
-collectCompares acc [] = []
+        _ -> comparePlayers player1 player2
+collectCompares acc _ [] = []
 
 comparePlayers :: PlayerInput -> PlayerInput -> ([String], Int, Int, [(Int, Int)])
 comparePlayers
