@@ -2,6 +2,8 @@
 
 Small playground for Haskell. Fourth implementation of open-face chinese poker.
 
+Documentation is [here](https://uor16x.github.io/ofc-calc-haskell/).
+
 - [x] Parse suit
 - [x] Parse value (rank of the card)
 - [x] Compare cards
@@ -10,6 +12,7 @@ Small playground for Haskell. Fourth implementation of open-face chinese poker.
 - [x] Output as JSON
 - [x] Calculate user points
 - [x] Compare user points
-- [ ] Is player scooped
-- [ ] Is next hand fantasy
-- [ ] Comments/Documentation
+- [x] Is player scooped
+- [x] Is next hand fantasy
+- [ ] Documentation
+- [ ] Comments
