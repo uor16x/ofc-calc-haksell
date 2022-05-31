@@ -11,8 +11,9 @@ import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON, encode)
 import qualified Game.Calc (PlayerInput (..), PlayerCalculations(..))
 import Game.Calc ( PlayerInput(PlayerInput), comparePlayers, calcGame )
+import Debug.Trace (traceIO, trace)
 
-data Input = InitialInput { username :: String, strs :: [String] }
+data Input = InitialInput { username :: String, withFantasy :: Bool, strs :: [String] }
     | BoardInput { username :: String, board :: [[Card]] }
     | CombinationInput { username :: String, scoop :: Bool, combinations :: [Combination] } deriving (Show, Generic)
 
@@ -25,6 +26,7 @@ main = do
     progName <- getProgName
     case length args of
         1 -> case parse (head args) of
+                -- Right parseResult -> trace "zxc" (print $ parseInput parseResult)
                 Right parseResult -> print $ encode parseResult
                 Left msg -> error msg
         _ -> error "Invalid number of arguments"
@@ -68,7 +70,10 @@ parse userInput = do
 
 
 parseInput :: String -> [Input]
-parseInput args = map (uncurry InitialInput) (read args :: [(String, [String])])
+parseInput args =
+  map
+  (\(name, withFantasy, board) -> InitialInput name withFantasy board)
+  (read args :: [(String, Bool, [String])])
 
 parseInputCards :: Input -> Either String Input
 parseInputCards InitialInput { username = username, strs = strs } = case getUserBoard strs of
