@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24maxtag_61CiPMfkd8N7BwPM8gaSXA"><span id="%24tag2con_61CiPMfkd8N7BwPM8gaSXA"><span id="%24con2tag_61CiPMfkd8N7BwPM8gaSXA"></span></span></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- | Card suit data type and its processing methods</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">CardParts.Suits</span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier">Suit</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="CardParts.Suits.html#parseSuit"><span class="hs-identifier">parseSuit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">elemIndex</span></span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Char</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">toLower</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">isDigit</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">digitToInt</span></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- | This type represents card suit.</span><span>
+</span><span id="line-12"></span><span id="local-6989586621679088395"><span id="local-6989586621679088396"></span></span><span class="hs-keyword">data</span><span> </span><span id="Suit"><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-var">Suit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Hearts"><span class="annot"><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span></span><span>
+</span><span id="line-13"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="Diamonds"><span class="annot"><a href="CardParts.Suits.html#Diamonds"><span class="hs-identifier hs-var">Diamonds</span></a></span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="Clubs"><span class="annot"><a href="CardParts.Suits.html#Clubs"><span class="hs-identifier hs-var">Clubs</span></a></span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="Spades"><span class="annot"><a href="CardParts.Suits.html#Spades"><span class="hs-identifier hs-var">Spades</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679088387"><span id="local-6989586621679088389"><span class="annot"><span class="annottext">Suit -&gt; Suit -&gt; Bool
+(Suit -&gt; Suit -&gt; Bool) -&gt; (Suit -&gt; Suit -&gt; Bool) -&gt; Eq Suit
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Suit -&gt; Suit -&gt; Bool
+$c/= :: Suit -&gt; Suit -&gt; Bool
+== :: Suit -&gt; Suit -&gt; Bool
+$c== :: Suit -&gt; Suit -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679088380"><span id="local-6989586621679088382"><span id="local-6989586621679088384"><span class="annot"><span class="annottext">Int -&gt; Suit -&gt; ShowS
+[Suit] -&gt; ShowS
+Suit -&gt; String
+(Int -&gt; Suit -&gt; ShowS)
+-&gt; (Suit -&gt; String) -&gt; ([Suit] -&gt; ShowS) -&gt; Show Suit
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Suit] -&gt; ShowS
+$cshowList :: [Suit] -&gt; ShowS
+show :: Suit -&gt; String
+$cshow :: Suit -&gt; String
+showsPrec :: Int -&gt; Suit -&gt; ShowS
+$cshowsPrec :: Int -&gt; Suit -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679088363"><span id="local-6989586621679088365"><span id="local-6989586621679088367"><span id="local-6989586621679088369"><span id="local-6989586621679088371"><span id="local-6989586621679088373"><span id="local-6989586621679088375"><span id="local-6989586621679088377"><span class="annot"><span class="annottext">Int -&gt; Suit
+Suit -&gt; Int
+Suit -&gt; [Suit]
+Suit -&gt; Suit
+Suit -&gt; Suit -&gt; [Suit]
+Suit -&gt; Suit -&gt; Suit -&gt; [Suit]
+(Suit -&gt; Suit)
+-&gt; (Suit -&gt; Suit)
+-&gt; (Int -&gt; Suit)
+-&gt; (Suit -&gt; Int)
+-&gt; (Suit -&gt; [Suit])
+-&gt; (Suit -&gt; Suit -&gt; [Suit])
+-&gt; (Suit -&gt; Suit -&gt; [Suit])
+-&gt; (Suit -&gt; Suit -&gt; Suit -&gt; [Suit])
+-&gt; Enum Suit
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+enumFromThenTo :: Suit -&gt; Suit -&gt; Suit -&gt; [Suit]
+$cenumFromThenTo :: Suit -&gt; Suit -&gt; Suit -&gt; [Suit]
+enumFromTo :: Suit -&gt; Suit -&gt; [Suit]
+$cenumFromTo :: Suit -&gt; Suit -&gt; [Suit]
+enumFromThen :: Suit -&gt; Suit -&gt; [Suit]
+$cenumFromThen :: Suit -&gt; Suit -&gt; [Suit]
+enumFrom :: Suit -&gt; [Suit]
+$cenumFrom :: Suit -&gt; [Suit]
+fromEnum :: Suit -&gt; Int
+$cfromEnum :: Suit -&gt; Int
+toEnum :: Int -&gt; Suit
+$ctoEnum :: Int -&gt; Suit
+pred :: Suit -&gt; Suit
+$cpred :: Suit -&gt; Suit
+succ :: Suit -&gt; Suit
+$csucc :: Suit -&gt; Suit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679088358"><span id="local-6989586621679088360"><span class="annot"><span class="annottext">Suit
+Suit -&gt; Suit -&gt; Bounded Suit
+forall a. a -&gt; a -&gt; Bounded a
+maxBound :: Suit
+$cmaxBound :: Suit
+minBound :: Suit
+$cminBound :: Suit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Suit -&gt; Rep Suit x)
+-&gt; (forall x. Rep Suit x -&gt; Suit) -&gt; Generic Suit
+forall x. Rep Suit x -&gt; Suit
+forall x. Suit -&gt; Rep Suit x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Suit x -&gt; Suit
+$cfrom :: forall x. Suit -&gt; Rep Suit x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679088350"><span id="local-6989586621679088352"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span></span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679088341"><span id="local-6989586621679088343"><span id="local-6989586621679088345"><span id="local-6989586621679088347"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span></span></span></span></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">{- | This method gets a char which represents card suit
+and returns a 'Suit' wrapped with 'Right'.
+
+Char should be a lowercase symbol from &quot;hdcs&quot; list.
+Otherwise - 'Left' with err msg returns.
+
+__Examples:__
+
+@
+parseSuit \'h\' = 'Right' 'Hearts'
+parseSuit \'c\' = 'Right' 'Clubs'
+parseSuit \'x\' = 'Left' &quot;There is no card suit marked as 'x'&quot;
+@
+-}</span><span>
+</span><span id="line-34"></span><span class="annot"><a href="CardParts.Suits.html#parseSuit"><span class="hs-identifier hs-type">parseSuit</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span><span>
+</span><span id="line-35"></span><span id="parseSuit"><span class="annot"><span class="annottext">parseSuit :: Char -&gt; Either String Suit
+</span><a href="CardParts.Suits.html#parseSuit"><span class="hs-identifier hs-var hs-var">parseSuit</span></a></span></span><span> </span><span id="local-6989586621679088339"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621679088339"><span class="hs-identifier hs-var">symbol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621679088339"><span class="hs-identifier hs-var">symbol</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; Maybe Int
+forall a. Eq a =&gt; a -&gt; [a] -&gt; Maybe Int
+</span><span class="hs-operator hs-var">`elemIndex`</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088338"><span class="hs-identifier hs-var">suitSymbols</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">Maybe Int
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Suit
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String Suit) -&gt; String -&gt; Either String Suit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;There is no card suit marked as &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621679088339"><span class="hs-identifier hs-var">symbol</span></a></span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679088336"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088336"><span class="hs-identifier hs-var">index</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Suit -&gt; Either String Suit
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Suit
+forall a. Enum a =&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">toEnum</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088336"><span class="hs-identifier hs-var">index</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>        </span><span class="hs-comment">-- | Just a shortcut for all 'Suit's as a list</span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><a href="#local-6989586621679088334"><span class="hs-identifier hs-type">allSuits</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-41"></span><span>        </span><span id="local-6989586621679088334"><span class="annot"><span class="annottext">allSuits :: [Suit]
+</span><a href="#local-6989586621679088334"><span class="hs-identifier hs-var hs-var">allSuits</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Suit
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">minBound</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Suit
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span>        </span><span class="hs-comment">-- | 'Suit' symbols are [hdcs].</span><span>
+</span><span id="line-44"></span><span>        </span><span class="hs-comment">-- This method take each 'Suit's' first letter lowercase to form this list.</span><span>
+</span><span id="line-45"></span><span>        </span><span class="annot"><a href="#local-6989586621679088338"><span class="hs-identifier hs-type">suitSymbols</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span class="hs-special">]</span><span>
+</span><span id="line-46"></span><span>        </span><span id="local-6989586621679088338"><span class="annot"><span class="annottext">suitSymbols :: String
+</span><a href="#local-6989586621679088338"><span class="hs-identifier hs-var hs-var">suitSymbols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toLower</span></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; (Suit -&gt; Char) -&gt; Suit -&gt; Char
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Char
+forall a. [a] -&gt; a
+</span><span class="hs-identifier hs-var">head</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Char) -&gt; (Suit -&gt; String) -&gt; Suit -&gt; Char
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Suit -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">(Suit -&gt; Char) -&gt; Suit -&gt; Char
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="#local-6989586621679088329"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679088329"><span class="annot"><span class="annottext">Suit
+</span><a href="#local-6989586621679088329"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Suit]
+</span><a href="#local-6989586621679088334"><span class="hs-identifier hs-var">allSuits</span></a></span><span class="hs-special">]</span></pre></body></html>

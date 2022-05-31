@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- | Combined (value + suit) card data type and its processing methods</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">CardParts.Cards</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Suits.html"><span class="hs-identifier">CardParts.Suits</span></a></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier">Suit</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="CardParts.Suits.html#parseSuit"><span class="hs-identifier">parseSuit</span></a></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Values.html"><span class="hs-identifier">CardParts.Values</span></a></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="CardParts.Values.html#Value"><span class="hs-identifier">Value</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="CardParts.Values.html#parseValue"><span class="hs-identifier">parseValue</span></a></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">parseJSON</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>      </span><span class="annot"><span class="hs-identifier">Object</span></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>      </span><span class="annot"><span class="hs-operator">(.:)</span></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>      </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">toJSON</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>      </span><span class="annot"><span class="hs-identifier">object</span></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>      </span><span class="annot"><span class="hs-identifier">KeyValue</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JsonValue</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Value</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Object</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Key</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- | This type represents a card - combination of suit and value.</span><span>
+</span><span id="line-19"></span><span id="local-6989586621679088648"><span id="local-6989586621679088649"></span></span><span class="hs-keyword">data</span><span> </span><span id="Card"><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Card"><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-20"></span><span>    </span><span id="value"><span class="annot"><span class="annottext">Card -&gt; Value
+</span><a href="CardParts.Cards.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="CardParts.Values.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span id="suit"><span class="annot"><span class="annottext">Card -&gt; Suit
+</span><a href="CardParts.Cards.html#suit"><span class="hs-identifier hs-var hs-var">suit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier hs-type">Suit</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679088639"><span id="local-6989586621679088641"><span id="local-6989586621679088643"><span class="annot"><span class="annottext">Int -&gt; Card -&gt; ShowS
+[Card] -&gt; ShowS
+Card -&gt; String
+(Int -&gt; Card -&gt; ShowS)
+-&gt; (Card -&gt; String) -&gt; ([Card] -&gt; ShowS) -&gt; Show Card
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Card] -&gt; ShowS
+$cshowList :: [Card] -&gt; ShowS
+show :: Card -&gt; String
+$cshow :: Card -&gt; String
+showsPrec :: Int -&gt; Card -&gt; ShowS
+$cshowsPrec :: Int -&gt; Card -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Card -&gt; Rep Card x)
+-&gt; (forall x. Rep Card x -&gt; Card) -&gt; Generic Card
+forall x. Rep Card x -&gt; Card
+forall x. Card -&gt; Rep Card x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Card x -&gt; Card
+$cfrom :: forall x. Card -&gt; Rep Card x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679088632"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-25"></span><span>    </span><span id="local-6989586621679088630"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Card
+</span><a href="#local-6989586621679088630"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">JsonValue.Object</span></span><span> </span><span id="local-6989586621679088629"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679088629"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Suit -&gt; Card) -&gt; Parser Value -&gt; Parser (Suit -&gt; Card)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679088629"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Value
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Key
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Suit -&gt; Card) -&gt; Parser Suit -&gt; Parser Card
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679088629"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Suit
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Key
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;suit&quot;</span></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Card
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679088621"><span id="local-6989586621679088623"><span id="local-6989586621679088625"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>    </span><span id="local-6989586621679088619"><span class="annot"><span class="annottext">toJSON :: Card -&gt; Value
+</span><a href="#local-6989586621679088619"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span id="local-6989586621679088618"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679088618"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span id="local-6989586621679088617"><span class="annot"><span class="annottext">Suit
+</span><a href="#local-6989586621679088617"><span class="hs-identifier hs-var">suit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">String -&gt; Key
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679088618"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String -&gt; Key
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;suit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Suit -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="#local-6989586621679088617"><span class="hs-identifier hs-var">suit</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679088614"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>    </span><span id="local-6989586621679088612"><span class="annot"><span class="annottext">c1 :: Card
+</span><a href="#local-6989586621679088612"><span class="hs-identifier hs-var">c1</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span id="local-6989586621679088611"><span class="annot"><span class="annottext">== :: Card -&gt; Card -&gt; Bool
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">==</span></span></span><span> </span><span id="local-6989586621679088610"><span class="annot"><span class="annottext">c2 :: Card
+</span><a href="#local-6989586621679088610"><span class="hs-identifier hs-var">c2</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Card -&gt; Value
+</span><a href="CardParts.Cards.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Card
+</span><a href="#local-6989586621679088612"><span class="hs-identifier hs-var">c1</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Card -&gt; Value
+</span><a href="CardParts.Cards.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Card
+</span><a href="#local-6989586621679088610"><span class="hs-identifier hs-var">c2</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679088596"><span id="local-6989586621679088598"><span id="local-6989586621679088600"><span id="local-6989586621679088602"><span id="local-6989586621679088604"><span id="local-6989586621679088606"><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621679088594"><span class="annot"><span class="annottext">c1 :: Card
+</span><a href="#local-6989586621679088594"><span class="hs-identifier hs-var">c1</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span id="local-6989586621679088593"><span class="annot"><span class="annottext">compare :: Card -&gt; Card -&gt; Ordering
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">`compare`</span></span></span><span> </span><span id="local-6989586621679088591"><span class="annot"><span class="annottext">c2 :: Card
+</span><a href="#local-6989586621679088591"><span class="hs-identifier hs-var">c2</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Card -&gt; Value
+</span><a href="CardParts.Cards.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Card
+</span><a href="#local-6989586621679088594"><span class="hs-identifier hs-var">c1</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Ordering
+forall a. Ord a =&gt; a -&gt; a -&gt; Ordering
+</span><span class="hs-operator hs-var">`compare`</span></span><span> </span><span class="annot"><span class="annottext">Card -&gt; Value
+</span><a href="CardParts.Cards.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Card
+</span><a href="#local-6989586621679088591"><span class="hs-identifier hs-var">c2</span></a></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">{- | This method gets a string which represents full card combination (value + suit)
+and returns a 'Card' wrapped with 'Right'. The function uses 'parseValue' and 'parseSuit' methods.
+
+Passed string should have length 2 and have format &quot;{VALUE}{SUIT}&quot;.
+
+__Examples:__
+
+@
+parseCard &quot;2c&quot; = 'Right' 'Two' 'Clubs'
+parseCard \&quot;As\&quot; = 'Right' 'Ace' 'Spades'
+parseCard &quot;&quot; = 'Left' &quot;Can't process emtpy string&quot;
+parseCard &quot;22c&quot; = 'Left' &quot;Argument length should be 2&quot;
+parseCard &quot;Zd&quot; = 'Left' &quot;There is no broadway card, which could be represented with \'Z\'&quot;
+parseCard &quot;5f&quot; = 'Left' &quot;There is no card suit marked as \'f\'&quot;
+parseCard &quot;2x&quot; = 'Left' &quot;There is no card suit marked as \'x\'&quot;
+@
+-}</span><span>
+</span><span id="line-54"></span><span class="annot"><a href="CardParts.Cards.html#parseCard"><span class="hs-identifier hs-type">parseCard</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span>
+</span><span id="line-55"></span><span id="parseCard"><span class="annot"><span class="annottext">parseCard :: String -&gt; Either String Card
+</span><a href="CardParts.Cards.html#parseCard"><span class="hs-identifier hs-var hs-var">parseCard</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Card
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Can't process emtpy string&quot;</span></span><span>
+</span><span id="line-56"></span><span class="annot"><a href="CardParts.Cards.html#parseCard"><span class="hs-identifier hs-var">parseCard</span></a></span><span> </span><span id="local-6989586621679088589"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088589"><span class="hs-identifier hs-var">str</span></a></span></span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088589"><span class="hs-identifier hs-var">str</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Card
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Argument length should be 2&quot;</span></span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-59"></span><span>        </span><span id="local-6989586621679088586"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679088586"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ValueResult
+</span><a href="CardParts.Values.html#parseValue"><span class="hs-identifier hs-var">parseValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; ValueResult) -&gt; Char -&gt; ValueResult
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Char
+forall a. [a] -&gt; a
+</span><span class="hs-identifier hs-var">head</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088589"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><span id="line-60"></span><span>        </span><span id="local-6989586621679088584"><span class="annot"><span class="annottext">Suit
+</span><a href="#local-6989586621679088584"><span class="hs-identifier hs-var">suit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Either String Suit
+</span><a href="CardParts.Suits.html#parseSuit"><span class="hs-identifier hs-var">parseSuit</span></a></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Either String Suit) -&gt; Char -&gt; Either String Suit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Char
+forall a. [a] -&gt; a
+</span><span class="hs-identifier hs-var">last</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088589"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Card -&gt; Either String Card
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Card -&gt; Either String Card) -&gt; Card -&gt; Either String Card
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Card :: Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">value :: Value
+</span><a href="CardParts.Cards.html#value"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679088586"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">suit :: Suit
+</span><a href="CardParts.Cards.html#suit"><span class="hs-identifier hs-var">suit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="#local-6989586621679088584"><span class="hs-identifier hs-var">suit</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span></pre></body></html>

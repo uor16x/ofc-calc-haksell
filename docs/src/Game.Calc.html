@@ -1,0 +1,876 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# HLINT ignore &quot;Use bimap&quot; #-}</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Game.Calc</span><span class="hs-special">(</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier">PlayerInput</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier">LineResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Game.Calc.html#LineType"><span class="hs-identifier">LineType</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier">PlayerCalculations</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Game.Calc.html#comparePlayers"><span class="hs-identifier">comparePlayers</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Game.Calc.html#calcGame"><span class="hs-identifier">calcGame</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Cards.html"><span class="hs-identifier">CardParts.Cards</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier">Card</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Game.Combination.html"><span class="hs-identifier">Game.Combination</span></a></span><span>
+</span><span id="line-7"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier">Combination</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>      </span><span class="annot"><a href="Game.Combination.html#CombinationName"><span class="hs-identifier">CombinationName</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>      </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier">Combination</span></a></span><span class="hs-special">(</span><span class="annot"><a href="Game.Combination.html#RankCombination"><span class="hs-identifier">RankCombination</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>      </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier">Combination</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Values.html"><span class="hs-identifier">CardParts.Values</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Values.html#Value"><span class="hs-identifier">Value</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Suits.html"><span class="hs-identifier">CardParts.Suits</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier">Suit</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">find</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span id="local-6989586621679089238"><span id="local-6989586621679089239"></span></span><span class="hs-keyword">data</span><span> </span><span id="PlayerInput"><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-var">PlayerInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PlayerInput"><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-var">PlayerInput</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-18"></span><span>    </span><span id="username"><span class="annot"><span class="annottext">PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var hs-var">username</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span id="board"><span class="annot"><span class="annottext">PlayerInput -&gt; [Combination]
+</span><a href="Game.Calc.html#board"><span class="hs-identifier hs-var hs-var">board</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span id="scoop"><span class="annot"><span class="annottext">PlayerInput -&gt; Bool
+</span><a href="Game.Calc.html#scoop"><span class="hs-identifier hs-var hs-var">scoop</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span id="withFantasy"><span class="annot"><span class="annottext">PlayerInput -&gt; Bool
+</span><a href="Game.Calc.html#withFantasy"><span class="hs-identifier hs-var hs-var">withFantasy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-22"></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089227"><span id="local-6989586621679089229"><span id="local-6989586621679089231"><span class="annot"><span class="annottext">Int -&gt; PlayerInput -&gt; ShowS
+[PlayerInput] -&gt; ShowS
+PlayerInput -&gt; String
+(Int -&gt; PlayerInput -&gt; ShowS)
+-&gt; (PlayerInput -&gt; String)
+-&gt; ([PlayerInput] -&gt; ShowS)
+-&gt; Show PlayerInput
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PlayerInput] -&gt; ShowS
+$cshowList :: [PlayerInput] -&gt; ShowS
+show :: PlayerInput -&gt; String
+$cshow :: PlayerInput -&gt; String
+showsPrec :: Int -&gt; PlayerInput -&gt; ShowS
+$cshowsPrec :: Int -&gt; PlayerInput -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. PlayerInput -&gt; Rep PlayerInput x)
+-&gt; (forall x. Rep PlayerInput x -&gt; PlayerInput)
+-&gt; Generic PlayerInput
+forall x. Rep PlayerInput x -&gt; PlayerInput
+forall x. PlayerInput -&gt; Rep PlayerInput x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep PlayerInput x -&gt; PlayerInput
+$cfrom :: forall x. PlayerInput -&gt; Rep PlayerInput x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089219"><span id="local-6989586621679089221"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span></span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089210"><span id="local-6989586621679089212"><span id="local-6989586621679089214"><span id="local-6989586621679089216"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span></span></span></span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span id="local-6989586621679089207"><span id="local-6989586621679089208"></span></span><span class="hs-keyword">data</span><span> </span><span id="LineType"><span class="annot"><a href="Game.Calc.html#LineType"><span class="hs-identifier hs-var">LineType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Top"><span class="annot"><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Middle"><span class="annot"><a href="Game.Calc.html#Middle"><span class="hs-identifier hs-var">Middle</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Bottom"><span class="annot"><a href="Game.Calc.html#Bottom"><span class="hs-identifier hs-var">Bottom</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089198"><span id="local-6989586621679089200"><span id="local-6989586621679089202"><span class="annot"><span class="annottext">Int -&gt; LineType -&gt; ShowS
+[LineType] -&gt; ShowS
+LineType -&gt; String
+(Int -&gt; LineType -&gt; ShowS)
+-&gt; (LineType -&gt; String) -&gt; ([LineType] -&gt; ShowS) -&gt; Show LineType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [LineType] -&gt; ShowS
+$cshowList :: [LineType] -&gt; ShowS
+show :: LineType -&gt; String
+$cshow :: LineType -&gt; String
+showsPrec :: Int -&gt; LineType -&gt; ShowS
+$cshowsPrec :: Int -&gt; LineType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. LineType -&gt; Rep LineType x)
+-&gt; (forall x. Rep LineType x -&gt; LineType) -&gt; Generic LineType
+forall x. Rep LineType x -&gt; LineType
+forall x. LineType -&gt; Rep LineType x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep LineType x -&gt; LineType
+$cfrom :: forall x. LineType -&gt; Rep LineType x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089192"><span id="local-6989586621679089194"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#LineType"><span class="hs-identifier hs-type">LineType</span></a></span></span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089184"><span id="local-6989586621679089186"><span id="local-6989586621679089188"><span id="local-6989586621679089190"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#LineType"><span class="hs-identifier hs-type">LineType</span></a></span></span></span></span></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">type</span><span> </span><span id="LineCompareResult"><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-var">LineCompareResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span id="local-6989586621679089182"><span id="local-6989586621679089183"></span></span><span class="hs-keyword">data</span><span> </span><span id="LineResult"><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-var">LineResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LineResult"><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-var">LineResult</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-35"></span><span>    </span><span id="lineType"><span class="annot"><span class="annottext">LineResult -&gt; LineType
+</span><a href="Game.Calc.html#lineType"><span class="hs-identifier hs-var hs-var">lineType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#LineType"><span class="hs-identifier hs-type">LineType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="combination"><span class="annot"><span class="annottext">LineResult -&gt; Combination
+</span><a href="Game.Calc.html#combination"><span class="hs-identifier hs-var hs-var">combination</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span id="points"><span class="annot"><span class="annottext">LineResult -&gt; Int
+</span><a href="Game.Calc.html#points"><span class="hs-identifier hs-var hs-var">points</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-38"></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089172"><span id="local-6989586621679089174"><span id="local-6989586621679089176"><span class="annot"><span class="annottext">Int -&gt; LineResult -&gt; ShowS
+[LineResult] -&gt; ShowS
+LineResult -&gt; String
+(Int -&gt; LineResult -&gt; ShowS)
+-&gt; (LineResult -&gt; String)
+-&gt; ([LineResult] -&gt; ShowS)
+-&gt; Show LineResult
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [LineResult] -&gt; ShowS
+$cshowList :: [LineResult] -&gt; ShowS
+show :: LineResult -&gt; String
+$cshow :: LineResult -&gt; String
+showsPrec :: Int -&gt; LineResult -&gt; ShowS
+$cshowsPrec :: Int -&gt; LineResult -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. LineResult -&gt; Rep LineResult x)
+-&gt; (forall x. Rep LineResult x -&gt; LineResult) -&gt; Generic LineResult
+forall x. Rep LineResult x -&gt; LineResult
+forall x. LineResult -&gt; Rep LineResult x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep LineResult x -&gt; LineResult
+$cfrom :: forall x. LineResult -&gt; Rep LineResult x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089166"><span id="local-6989586621679089168"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span></span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089158"><span id="local-6989586621679089160"><span id="local-6989586621679089162"><span id="local-6989586621679089164"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span></span></span></span></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span id="local-6989586621679089156"><span id="local-6989586621679089157"></span></span><span class="hs-keyword">data</span><span> </span><span id="PlayerCalculations"><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-var">PlayerCalculations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PlayerCalculations"><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-var">PlayerCalculations</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-44"></span><span>    </span><span id="player"><span class="annot"><span class="annottext">PlayerCalculations -&gt; PlayerInput
+</span><a href="Game.Calc.html#player"><span class="hs-identifier hs-var hs-var">player</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span id="top"><span class="annot"><span class="annottext">PlayerCalculations -&gt; LineResult
+</span><a href="Game.Calc.html#top"><span class="hs-identifier hs-var hs-var">top</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span id="middle"><span class="annot"><span class="annottext">PlayerCalculations -&gt; LineResult
+</span><a href="Game.Calc.html#middle"><span class="hs-identifier hs-var hs-var">middle</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span id="bottom"><span class="annot"><span class="annottext">PlayerCalculations -&gt; LineResult
+</span><a href="Game.Calc.html#bottom"><span class="hs-identifier hs-var hs-var">bottom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span id="isScoop"><span class="annot"><span class="annottext">PlayerCalculations -&gt; Bool
+</span><a href="Game.Calc.html#isScoop"><span class="hs-identifier hs-var hs-var">isScoop</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span id="isNextFantasy"><span class="annot"><span class="annottext">PlayerCalculations -&gt; Bool
+</span><a href="Game.Calc.html#isNextFantasy"><span class="hs-identifier hs-var hs-var">isNextFantasy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span id="totalDetailed"><span class="annot"><span class="annottext">PlayerCalculations -&gt; (String, [LineCompareResult])
+</span><a href="Game.Calc.html#totalDetailed"><span class="hs-identifier hs-var hs-var">totalDetailed</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span id="total"><span class="annot"><span class="annottext">PlayerCalculations -&gt; Int
+</span><a href="Game.Calc.html#total"><span class="hs-identifier hs-var hs-var">total</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-52"></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. PlayerCalculations -&gt; Rep PlayerCalculations x)
+-&gt; (forall x. Rep PlayerCalculations x -&gt; PlayerCalculations)
+-&gt; Generic PlayerCalculations
+forall x. Rep PlayerCalculations x -&gt; PlayerCalculations
+forall x. PlayerCalculations -&gt; Rep PlayerCalculations x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep PlayerCalculations x -&gt; PlayerCalculations
+$cfrom :: forall x. PlayerCalculations -&gt; Rep PlayerCalculations x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089141"><span id="local-6989586621679089143"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-type">PlayerCalculations</span></a></span></span></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679089133"><span id="local-6989586621679089135"><span id="local-6989586621679089137"><span id="local-6989586621679089139"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-type">PlayerCalculations</span></a></span></span></span></span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="Game.Calc.html#calcGame"><span class="hs-identifier hs-type">calcGame</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-type">PlayerCalculations</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-58"></span><span id="calcGame"><span class="annot"><span class="annottext">calcGame :: [PlayerInput] -&gt; [PlayerCalculations]
+</span><a href="Game.Calc.html#calcGame"><span class="hs-identifier hs-var hs-var">calcGame</span></a></span></span><span> </span><span id="local-6989586621679089132"><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; [PlayerCalculations]
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Invalid number of players&quot;</span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[(String, [LineCompareResult])] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[(String, [LineCompareResult])]
+</span><a href="#local-6989586621679089128"><span class="hs-identifier hs-var">linesResults</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; [PlayerCalculations]
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Invalid number of linesResults&quot;</span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; PlayerCalculations) -&gt; [Int] -&gt; [PlayerCalculations]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; PlayerCalculations
+</span><a href="#local-6989586621679089127"><span class="hs-identifier hs-var">mapLinesResults</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-glyph">..</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span class="hs-special">]</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="#local-6989586621679089128"><span class="hs-identifier hs-type">linesResults</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621679089128"><span class="annot"><span class="annottext">linesResults :: [(String, [LineCompareResult])]
+</span><a href="#local-6989586621679089128"><span class="hs-identifier hs-var hs-var">linesResults</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[LineCompareResult]
+-&gt; [PlayerInput]
+-&gt; [PlayerInput]
+-&gt; [(String, [LineCompareResult])]
+</span><a href="Game.Calc.html#collectLinesResults"><span class="hs-identifier hs-var">collectLinesResults</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621679089127"><span class="hs-identifier hs-type">mapLinesResults</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-type">PlayerCalculations</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621679089127"><span class="annot"><span class="annottext">mapLinesResults :: Int -&gt; PlayerCalculations
+</span><a href="#local-6989586621679089127"><span class="hs-identifier hs-var hs-var">mapLinesResults</span></a></span></span><span> </span><span id="local-6989586621679089125"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PlayerCalculations :: PlayerInput
+-&gt; LineResult
+-&gt; LineResult
+-&gt; LineResult
+-&gt; Bool
+-&gt; Bool
+-&gt; (String, [LineCompareResult])
+-&gt; Int
+-&gt; PlayerCalculations
+</span><a href="Game.Calc.html#PlayerCalculations"><span class="hs-identifier hs-type">PlayerCalculations</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">player :: PlayerInput
+</span><a href="Game.Calc.html#player"><span class="hs-identifier hs-var">player</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">isScoop :: Bool
+</span><a href="Game.Calc.html#isScoop"><span class="hs-identifier hs-var">isScoop</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; Bool
+</span><a href="Game.Calc.html#scoop"><span class="hs-identifier hs-var hs-var">scoop</span></a></span><span> </span><span class="annot"><span class="annottext">(PlayerInput -&gt; Bool) -&gt; PlayerInput -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">isNextFantasy :: Bool
+</span><a href="Game.Calc.html#isNextFantasy"><span class="hs-identifier hs-var">isNextFantasy</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; [Combination] -&gt; Bool
+</span><a href="#local-6989586621679089123"><span class="hs-identifier hs-var">nextIsFantasy</span></a></span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; Bool
+</span><a href="Game.Calc.html#withFantasy"><span class="hs-identifier hs-var hs-var">withFantasy</span></a></span><span> </span><span class="annot"><span class="annottext">(PlayerInput -&gt; Bool) -&gt; PlayerInput -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; [Combination]
+</span><a href="Game.Calc.html#board"><span class="hs-identifier hs-var hs-var">board</span></a></span><span> </span><span class="annot"><span class="annottext">(PlayerInput -&gt; [Combination]) -&gt; PlayerInput -&gt; [Combination]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">top :: LineResult
+</span><a href="Game.Calc.html#top"><span class="hs-identifier hs-var">top</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineResult :: LineType -&gt; Combination -&gt; Int -&gt; LineResult
+</span><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">combination :: Combination
+</span><a href="Game.Calc.html#combination"><span class="hs-identifier hs-var">combination</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var">combinationByIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- top line has index 0,</span><span>
+</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">lineType :: LineType
+</span><a href="Game.Calc.html#lineType"><span class="hs-identifier hs-var">lineType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">points :: Int
+</span><a href="Game.Calc.html#points"><span class="hs-identifier hs-var">points</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var">combinationByIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>      </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="annottext">middle :: LineResult
+</span><a href="Game.Calc.html#middle"><span class="hs-identifier hs-var">middle</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineResult :: LineType -&gt; Combination -&gt; Int -&gt; LineResult
+</span><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-80"></span><span>        </span><span class="annot"><span class="annottext">combination :: Combination
+</span><a href="Game.Calc.html#combination"><span class="hs-identifier hs-var">combination</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var">combinationByIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- middle line has index 1,</span><span>
+</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">lineType :: LineType
+</span><a href="Game.Calc.html#lineType"><span class="hs-identifier hs-var">lineType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Middle"><span class="hs-identifier hs-var">Middle</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">points :: Int
+</span><a href="Game.Calc.html#points"><span class="hs-identifier hs-var">points</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Middle"><span class="hs-identifier hs-var">Middle</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var">combinationByIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">bottom :: LineResult
+</span><a href="Game.Calc.html#bottom"><span class="hs-identifier hs-var">bottom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineResult :: LineType -&gt; Combination -&gt; Int -&gt; LineResult
+</span><a href="Game.Calc.html#LineResult"><span class="hs-identifier hs-type">LineResult</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">combination :: Combination
+</span><a href="Game.Calc.html#combination"><span class="hs-identifier hs-var">combination</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var">combinationByIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- bottom line has index 2,</span><span>
+</span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">lineType :: LineType
+</span><a href="Game.Calc.html#lineType"><span class="hs-identifier hs-var">lineType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Bottom"><span class="hs-identifier hs-var">Bottom</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">points :: Int
+</span><a href="Game.Calc.html#points"><span class="hs-identifier hs-var">points</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Bottom"><span class="hs-identifier hs-var">Bottom</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var">combinationByIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089132"><span class="hs-identifier hs-var">playerInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput] -&gt; Int -&gt; PlayerInput
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>      </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">totalDetailed :: (String, [LineCompareResult])
+</span><a href="Game.Calc.html#totalDetailed"><span class="hs-identifier hs-var">totalDetailed</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(String, [LineCompareResult])]
+</span><a href="#local-6989586621679089128"><span class="hs-identifier hs-var">linesResults</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, [LineCompareResult])]
+-&gt; Int -&gt; (String, [LineCompareResult])
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">total :: Int
+</span><a href="Game.Calc.html#total"><span class="hs-identifier hs-var">total</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String, [LineCompareResult]) -&gt; Int
+</span><a href="#local-6989586621679089120"><span class="hs-identifier hs-var">totalPoints</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(String, [LineCompareResult])]
+</span><a href="#local-6989586621679089128"><span class="hs-identifier hs-var">linesResults</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, [LineCompareResult])]
+-&gt; Int -&gt; (String, [LineCompareResult])
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089125"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><a href="#local-6989586621679089122"><span class="hs-identifier hs-type">combinationByIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span>
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621679089122"><span class="annot"><span class="annottext">combinationByIndex :: PlayerInput -&gt; Int -&gt; Combination
+</span><a href="#local-6989586621679089122"><span class="hs-identifier hs-var hs-var">combinationByIndex</span></a></span></span><span> </span><span id="local-6989586621679089119"><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089119"><span class="hs-identifier hs-var">playerInput</span></a></span></span><span> </span><span id="local-6989586621679089118"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089118"><span class="hs-identifier hs-var">index</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; [Combination]
+</span><a href="Game.Calc.html#board"><span class="hs-identifier hs-var hs-var">board</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089119"><span class="hs-identifier hs-var">playerInput</span></a></span><span> </span><span class="annot"><span class="annottext">[Combination] -&gt; Int -&gt; Combination
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089118"><span class="hs-identifier hs-var">index</span></a></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="#local-6989586621679089117"><span class="hs-identifier hs-type">getTotal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621679089117"><span class="annot"><span class="annottext">getTotal :: LineCompareResult -&gt; Int
+</span><a href="#local-6989586621679089117"><span class="hs-identifier hs-var hs-var">getTotal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089116"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089116"><span class="hs-identifier hs-var">combo</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089115"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089115"><span class="hs-identifier hs-var">bonus</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[(Int, Int)]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089116"><span class="hs-identifier hs-var">combo</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089115"><span class="hs-identifier hs-var">bonus</span></a></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="#local-6989586621679089120"><span class="hs-identifier hs-type">totalPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621679089120"><span class="annot"><span class="annottext">totalPoints :: (String, [LineCompareResult]) -&gt; Int
+</span><a href="#local-6989586621679089120"><span class="hs-identifier hs-var hs-var">totalPoints</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089113"><span class="annot"><span class="annottext">[LineCompareResult]
+</span><a href="#local-6989586621679089113"><span class="hs-identifier hs-var">compareResults</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; LineCompareResult -&gt; Int)
+-&gt; Int -&gt; [LineCompareResult] -&gt; Int
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679089111"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089111"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679089110"><span class="annot"><span class="annottext">LineCompareResult
+</span><a href="#local-6989586621679089110"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089111"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">LineCompareResult -&gt; Int
+</span><a href="#local-6989586621679089117"><span class="hs-identifier hs-var">getTotal</span></a></span><span> </span><span class="annot"><span class="annottext">LineCompareResult
+</span><a href="#local-6989586621679089110"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">[LineCompareResult]
+</span><a href="#local-6989586621679089113"><span class="hs-identifier hs-var">compareResults</span></a></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="#local-6989586621679089123"><span class="hs-identifier hs-type">nextIsFantasy</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-103"></span><span>    </span><span id="local-6989586621679089123"><span class="annot"><span class="annottext">nextIsFantasy :: Bool -&gt; [Combination] -&gt; Bool
+</span><a href="#local-6989586621679089123"><span class="hs-identifier hs-var hs-var">nextIsFantasy</span></a></span></span><span> </span><span id="local-6989586621679089109"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089109"><span class="hs-identifier hs-var">withFantasy</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089108"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089108"><span class="hs-identifier hs-var">top</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089107"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089107"><span class="hs-identifier hs-var">middle</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089106"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089106"><span class="hs-identifier hs-var">bottom</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span class="annot"><span class="annottext">[Combination]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089109"><span class="hs-identifier hs-var">withFantasy</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-105"></span><span>        </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089108"><span class="hs-identifier hs-var">top</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Card -&gt; Combination
+</span><a href="Game.Combination.html#RankCombination"><span class="hs-identifier hs-var">RankCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#Set"><span class="hs-identifier hs-var">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Two"><span class="hs-identifier hs-var">Two</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089107"><span class="hs-identifier hs-var">middle</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Card -&gt; Card -&gt; Combination
+</span><a href="Game.Combination.html#PartCombination"><span class="hs-identifier hs-var">PartCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#FullHouse"><span class="hs-identifier hs-var">FullHouse</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Two"><span class="hs-identifier hs-var">Two</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Three"><span class="hs-identifier hs-var">Three</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089106"><span class="hs-identifier hs-var">bottom</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Card -&gt; Combination
+</span><a href="Game.Combination.html#RankCombination"><span class="hs-identifier hs-var">RankCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#FourOfAKind"><span class="hs-identifier hs-var">FourOfAKind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Two"><span class="hs-identifier hs-var">Two</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089108"><span class="hs-identifier hs-var">top</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Card -&gt; Combination
+</span><a href="Game.Combination.html#RankCombination"><span class="hs-identifier hs-var">RankCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#Pair"><span class="hs-identifier hs-var">Pair</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Queen"><span class="hs-identifier hs-var">Queen</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089107"><span class="hs-identifier hs-var">middle</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Card -&gt; Card -&gt; Combination
+</span><a href="Game.Combination.html#PartCombination"><span class="hs-identifier hs-var">PartCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#FullHouse"><span class="hs-identifier hs-var">FullHouse</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Two"><span class="hs-identifier hs-var">Two</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Three"><span class="hs-identifier hs-var">Three</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089106"><span class="hs-identifier hs-var">bottom</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Card -&gt; Combination
+</span><a href="Game.Combination.html#RankCombination"><span class="hs-identifier hs-var">RankCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#StraightFlush"><span class="hs-identifier hs-var">StraightFlush</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Suit -&gt; Card
+</span><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-var">Card</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="CardParts.Values.html#Five"><span class="hs-identifier hs-var">Five</span></a></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><a href="CardParts.Suits.html#Hearts"><span class="hs-identifier hs-var">Hearts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="#local-6989586621679089123"><span class="hs-identifier hs-var">nextIsFantasy</span></a></span><span> </span><span id="local-6989586621679089092"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089092"><span class="hs-identifier hs-var">withFantasy</span></a></span></span><span> </span><span class="annot"><span class="annottext">[Combination]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Bool
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Invalid number of lines for fantasy calc&quot;</span></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="annot"><a href="Game.Calc.html#collectLinesResults"><span class="hs-identifier hs-type">collectLinesResults</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-115"></span><span id="collectLinesResults"><span class="annot"><span class="annottext">collectLinesResults :: [LineCompareResult]
+-&gt; [PlayerInput]
+-&gt; [PlayerInput]
+-&gt; [(String, [LineCompareResult])]
+</span><a href="Game.Calc.html#collectLinesResults"><span class="hs-identifier hs-var hs-var">collectLinesResults</span></a></span></span><span> </span><span id="local-6989586621679089091"><span class="annot"><span class="annottext">[LineCompareResult]
+</span><a href="#local-6989586621679089091"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679089090"><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089090"><span class="hs-identifier hs-var">full</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089089"><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089089"><span class="hs-identifier hs-var">currPlayer</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089088"><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089088"><span class="hs-identifier hs-var">players</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var hs-var">username</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089089"><span class="hs-identifier hs-var">currPlayer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(PlayerInput -&gt; LineCompareResult)
+-&gt; [PlayerInput] -&gt; [LineCompareResult]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; PlayerInput -&gt; LineCompareResult
+</span><a href="#local-6989586621679089087"><span class="hs-identifier hs-var">getResult</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089089"><span class="hs-identifier hs-var">currPlayer</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089086"><span class="hs-identifier hs-var">otherInputs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String, [LineCompareResult])
+-&gt; [(String, [LineCompareResult])]
+-&gt; [(String, [LineCompareResult])]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[LineCompareResult]
+-&gt; [PlayerInput]
+-&gt; [PlayerInput]
+-&gt; [(String, [LineCompareResult])]
+</span><a href="Game.Calc.html#collectLinesResults"><span class="hs-identifier hs-var">collectLinesResults</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[LineCompareResult]
+</span><a href="#local-6989586621679089091"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="annot"><span class="annottext">[LineCompareResult] -&gt; [LineCompareResult] -&gt; [LineCompareResult]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">(PlayerInput -&gt; LineCompareResult)
+-&gt; [PlayerInput] -&gt; [LineCompareResult]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PlayerInput -&gt; PlayerInput -&gt; LineCompareResult
+</span><a href="#local-6989586621679089087"><span class="hs-identifier hs-var">getResult</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089089"><span class="hs-identifier hs-var">currPlayer</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089086"><span class="hs-identifier hs-var">otherInputs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089090"><span class="hs-identifier hs-var">full</span></a></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089088"><span class="hs-identifier hs-var">players</span></a></span><span>
+</span><span id="line-117"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-118"></span><span>      </span><span class="annot"><a href="#local-6989586621679089086"><span class="hs-identifier hs-type">otherInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-119"></span><span>      </span><span id="local-6989586621679089086"><span class="annot"><span class="annottext">otherInputs :: [PlayerInput]
+</span><a href="#local-6989586621679089086"><span class="hs-identifier hs-var hs-var">otherInputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PlayerInput -&gt; Bool) -&gt; [PlayerInput] -&gt; [PlayerInput]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679089085"><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089085"><span class="hs-identifier hs-var">player</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var hs-var">username</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089085"><span class="hs-identifier hs-var">player</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var hs-var">username</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089089"><span class="hs-identifier hs-var">currPlayer</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><a href="#local-6989586621679089090"><span class="hs-identifier hs-var">full</span></a></span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span>      </span><span class="annot"><a href="#local-6989586621679089084"><span class="hs-identifier hs-type">negateTuple</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>      </span><span id="local-6989586621679089084"><span class="annot"><span class="annottext">negateTuple :: (Int, Int) -&gt; (Int, Int)
+</span><a href="#local-6989586621679089084"><span class="hs-identifier hs-var hs-var">negateTuple</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089083"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089083"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089082"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089082"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089083"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089082"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span>      </span><span class="annot"><a href="#local-6989586621679089087"><span class="hs-identifier hs-type">getResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>      </span><span id="local-6989586621679089087"><span class="annot"><span class="annottext">getResult :: PlayerInput -&gt; PlayerInput -&gt; LineCompareResult
+</span><a href="#local-6989586621679089087"><span class="hs-identifier hs-var hs-var">getResult</span></a></span></span><span> </span><span id="local-6989586621679089081"><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089081"><span class="hs-identifier hs-var">player1</span></a></span></span><span> </span><span id="local-6989586621679089080"><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089080"><span class="hs-identifier hs-var">player2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(LineCompareResult -&gt; Bool)
+-&gt; [LineCompareResult] -&gt; Maybe LineCompareResult
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">find</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679089079"><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679089079"><span class="hs-identifier hs-var">usernames</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[(Int, Int)]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679089079"><span class="hs-identifier hs-var">usernames</span></a></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; [String] -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var hs-var">username</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089080"><span class="hs-identifier hs-var">player2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var hs-var">username</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089080"><span class="hs-identifier hs-var">player2</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[LineCompareResult]
+</span><a href="#local-6989586621679089091"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-126"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089078"><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679089078"><span class="hs-identifier hs-var">usernames</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089077"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089077"><span class="hs-identifier hs-var">combo</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089076"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089076"><span class="hs-identifier hs-var">bonus</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089075"><span class="annot"><span class="annottext">[(Int, Int)]
+</span><a href="#local-6989586621679089075"><span class="hs-identifier hs-var">debug</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; [String]
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679089078"><span class="hs-identifier hs-var">usernames</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089077"><span class="hs-identifier hs-var">combo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089076"><span class="hs-identifier hs-var">bonus</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">((Int, Int) -&gt; (Int, Int)) -&gt; [(Int, Int)] -&gt; [(Int, Int)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Int, Int) -&gt; (Int, Int)
+</span><a href="#local-6989586621679089084"><span class="hs-identifier hs-var">negateTuple</span></a></span><span> </span><span class="annot"><span class="annottext">[(Int, Int)]
+</span><a href="#local-6989586621679089075"><span class="hs-identifier hs-var">debug</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>        </span><span class="annot"><span class="annottext">Maybe LineCompareResult
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PlayerInput -&gt; PlayerInput -&gt; LineCompareResult
+</span><a href="Game.Calc.html#comparePlayers"><span class="hs-identifier hs-var">comparePlayers</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089081"><span class="hs-identifier hs-var">player1</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><a href="#local-6989586621679089080"><span class="hs-identifier hs-var">player2</span></a></span><span>
+</span><span id="line-128"></span><span class="annot"><a href="Game.Calc.html#collectLinesResults"><span class="hs-identifier hs-var">collectLinesResults</span></a></span><span> </span><span id="local-6989586621679089073"><span class="annot"><span class="annottext">[LineCompareResult]
+</span><a href="#local-6989586621679089073"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="annot"><span class="annottext">[PlayerInput]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">type</span><span> </span><span id="IntPair"><span class="annot"><a href="Game.Calc.html#IntPair"><span class="hs-identifier hs-var">IntPair</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="annot"><a href="Game.Calc.html#comparePlayers"><span class="hs-identifier hs-type">comparePlayers</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Calc.html#LineCompareResult"><span class="hs-identifier hs-type">LineCompareResult</span></a></span><span>
+</span><span id="line-133"></span><span id="comparePlayers"><span class="annot"><span class="annottext">comparePlayers :: PlayerInput -&gt; PlayerInput -&gt; LineCompareResult
+</span><a href="Game.Calc.html#comparePlayers"><span class="hs-identifier hs-var hs-var">comparePlayers</span></a></span></span><span>
+</span><span id="line-134"></span><span>  </span><span id="local-6989586621679089071"><span class="annot"><span class="annottext">p1 :: PlayerInput
+</span><a href="#local-6989586621679089071"><span class="hs-identifier hs-var">p1</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">username :: PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var">username</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679089070"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679089070"><span class="hs-identifier hs-var">p1name</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">board :: PlayerInput -&gt; [Combination]
+</span><a href="Game.Calc.html#board"><span class="hs-identifier hs-var">board</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089069"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089069"><span class="hs-identifier hs-var">p1top</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089068"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089068"><span class="hs-identifier hs-var">p1middle</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089067"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089067"><span class="hs-identifier hs-var">p1bottom</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span class="annot"><span class="annottext">[Combination]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">scoop :: PlayerInput -&gt; Bool
+</span><a href="Game.Calc.html#scoop"><span class="hs-identifier hs-var">scoop</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679089066"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089066"><span class="hs-identifier hs-var">p1scoop</span></a></span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621679089065"><span class="annot"><span class="annottext">p2 :: PlayerInput
+</span><a href="#local-6989586621679089065"><span class="hs-identifier hs-var">p2</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Game.Calc.html#PlayerInput"><span class="hs-identifier hs-type">PlayerInput</span></a></span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">username :: PlayerInput -&gt; String
+</span><a href="Game.Calc.html#username"><span class="hs-identifier hs-var">username</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679089064"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679089064"><span class="hs-identifier hs-var">p2name</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">board :: PlayerInput -&gt; [Combination]
+</span><a href="Game.Calc.html#board"><span class="hs-identifier hs-var">board</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679089063"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089063"><span class="hs-identifier hs-var">p2top</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089062"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089062"><span class="hs-identifier hs-var">p2middle</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089061"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089061"><span class="hs-identifier hs-var">p2bottom</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span class="annot"><span class="annottext">[Combination]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">scoop :: PlayerInput -&gt; Bool
+</span><a href="Game.Calc.html#scoop"><span class="hs-identifier hs-var">scoop</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679089060"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089060"><span class="hs-identifier hs-var">p2scoop</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-136"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679089070"><span class="hs-identifier hs-var">p1name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679089064"><span class="hs-identifier hs-var">p2name</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>    </span><span class="annot"><span class="annottext">[(Int, Int)] -&gt; Int
+</span><a href="Game.Calc.html#foldPoints"><span class="hs-identifier hs-var">foldPoints</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">(Int, Int)
+</span><a href="#local-6989586621679089058"><span class="hs-identifier hs-var">topPoints</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(Int, Int)
+</span><a href="#local-6989586621679089057"><span class="hs-identifier hs-var">middlePoints</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(Int, Int)
+</span><a href="#local-6989586621679089056"><span class="hs-identifier hs-var">bottomPoints</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089055"><span class="hs-identifier hs-var">bonusCalculated</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-special">[</span><span>
+</span><span id="line-140"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Int, Int) -&gt; Int
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(Int, Int)
+</span><a href="#local-6989586621679089058"><span class="hs-identifier hs-var">topPoints</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089054"><span class="hs-identifier hs-var">topBonus</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Int, Int) -&gt; Int
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(Int, Int)
+</span><a href="#local-6989586621679089057"><span class="hs-identifier hs-var">middlePoints</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089053"><span class="hs-identifier hs-var">middleBonus</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Int, Int) -&gt; Int
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(Int, Int)
+</span><a href="#local-6989586621679089056"><span class="hs-identifier hs-var">bottomPoints</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089052"><span class="hs-identifier hs-var">bottomBonus</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><a href="#local-6989586621679089058"><span class="hs-identifier hs-type">topPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#IntPair"><span class="hs-identifier hs-type">IntPair</span></a></span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621679089058"><span class="annot"><span class="annottext">topPoints :: (Int, Int)
+</span><a href="#local-6989586621679089058"><span class="hs-identifier hs-var hs-var">topPoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-147"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089066"><span class="hs-identifier hs-var">p1scoop</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089069"><span class="hs-identifier hs-var">p1top</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089060"><span class="hs-identifier hs-var">p2scoop</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089063"><span class="hs-identifier hs-var">p2top</span></a></span><span>
+</span><span id="line-149"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span>    </span><span class="annot"><a href="#local-6989586621679089057"><span class="hs-identifier hs-type">middlePoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#IntPair"><span class="hs-identifier hs-type">IntPair</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621679089057"><span class="annot"><span class="annottext">middlePoints :: (Int, Int)
+</span><a href="#local-6989586621679089057"><span class="hs-identifier hs-var hs-var">middlePoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-153"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089066"><span class="hs-identifier hs-var">p1scoop</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Middle"><span class="hs-identifier hs-var">Middle</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089068"><span class="hs-identifier hs-var">p1middle</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089060"><span class="hs-identifier hs-var">p2scoop</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Middle"><span class="hs-identifier hs-var">Middle</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089062"><span class="hs-identifier hs-var">p2middle</span></a></span><span>
+</span><span id="line-155"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span>    </span><span class="annot"><a href="#local-6989586621679089056"><span class="hs-identifier hs-type">bottomPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#IntPair"><span class="hs-identifier hs-type">IntPair</span></a></span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621679089056"><span class="annot"><span class="annottext">bottomPoints :: (Int, Int)
+</span><a href="#local-6989586621679089056"><span class="hs-identifier hs-var hs-var">bottomPoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-159"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089066"><span class="hs-identifier hs-var">p1scoop</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Bottom"><span class="hs-identifier hs-var">Bottom</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089067"><span class="hs-identifier hs-var">p1bottom</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089060"><span class="hs-identifier hs-var">p2scoop</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Bottom"><span class="hs-identifier hs-var">Bottom</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089061"><span class="hs-identifier hs-var">p2bottom</span></a></span><span>
+</span><span id="line-161"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span>    </span><span class="annot"><a href="#local-6989586621679089051"><span class="hs-identifier hs-type">mirrorPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-164"></span><span>    </span><span id="local-6989586621679089051"><span class="annot"><span class="annottext">mirrorPoints :: Int -&gt; (Int, Int)
+</span><a href="#local-6989586621679089051"><span class="hs-identifier hs-var hs-var">mirrorPoints</span></a></span></span><span> </span><span id="local-6989586621679089050"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089050"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089050"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089050"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span>    </span><span class="annot"><a href="#local-6989586621679089049"><span class="hs-identifier hs-type">getBonus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-167"></span><span>    </span><span id="local-6989586621679089049"><span class="annot"><span class="annottext">getBonus :: Combination -&gt; Combination -&gt; Int
+</span><a href="#local-6989586621679089049"><span class="hs-identifier hs-var hs-var">getBonus</span></a></span></span><span> </span><span id="local-6989586621679089048"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089048"><span class="hs-identifier hs-var">c1</span></a></span></span><span> </span><span id="local-6989586621679089047"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089047"><span class="hs-identifier hs-var">c2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089066"><span class="hs-identifier hs-var">p1scoop</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679089060"><span class="hs-identifier hs-var">p2scoop</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-168"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-169"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-170"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-171"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089048"><span class="hs-identifier hs-var">c1</span></a></span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089047"><span class="hs-identifier hs-var">c2</span></a></span><span>
+</span><span id="line-172"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-173"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span>    </span><span class="annot"><a href="#local-6989586621679089054"><span class="hs-identifier hs-type">topBonus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-176"></span><span>    </span><span id="local-6989586621679089054"><span class="annot"><span class="annottext">topBonus :: Int
+</span><a href="#local-6989586621679089054"><span class="hs-identifier hs-var hs-var">topBonus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Int
+</span><a href="#local-6989586621679089049"><span class="hs-identifier hs-var">getBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089069"><span class="hs-identifier hs-var">p1top</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089063"><span class="hs-identifier hs-var">p2top</span></a></span><span>
+</span><span id="line-177"></span><span>
+</span><span id="line-178"></span><span>    </span><span class="annot"><a href="#local-6989586621679089053"><span class="hs-identifier hs-type">middleBonus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-179"></span><span>    </span><span id="local-6989586621679089053"><span class="annot"><span class="annottext">middleBonus :: Int
+</span><a href="#local-6989586621679089053"><span class="hs-identifier hs-var hs-var">middleBonus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Int
+</span><a href="#local-6989586621679089049"><span class="hs-identifier hs-var">getBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089068"><span class="hs-identifier hs-var">p1middle</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089062"><span class="hs-identifier hs-var">p2middle</span></a></span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span>    </span><span class="annot"><a href="#local-6989586621679089052"><span class="hs-identifier hs-type">bottomBonus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-182"></span><span>    </span><span id="local-6989586621679089052"><span class="annot"><span class="annottext">bottomBonus :: Int
+</span><a href="#local-6989586621679089052"><span class="hs-identifier hs-var hs-var">bottomBonus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Combination -&gt; Combination -&gt; Int
+</span><a href="#local-6989586621679089049"><span class="hs-identifier hs-var">getBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089067"><span class="hs-identifier hs-var">p1bottom</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089061"><span class="hs-identifier hs-var">p2bottom</span></a></span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span>    </span><span class="annot"><a href="#local-6989586621679089045"><span class="hs-identifier hs-type">summBonus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-185"></span><span>    </span><span id="local-6989586621679089045"><span class="annot"><span class="annottext">summBonus :: Int
+</span><a href="#local-6989586621679089045"><span class="hs-identifier hs-var hs-var">summBonus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089054"><span class="hs-identifier hs-var">topBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089053"><span class="hs-identifier hs-var">middleBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089052"><span class="hs-identifier hs-var">bottomBonus</span></a></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span>    </span><span class="annot"><a href="#local-6989586621679089055"><span class="hs-identifier hs-type">bonusCalculated</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-188"></span><span>    </span><span id="local-6989586621679089055"><span class="annot"><span class="annottext">bonusCalculated :: Int
+</span><a href="#local-6989586621679089055"><span class="hs-identifier hs-var hs-var">bonusCalculated</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089054"><span class="hs-identifier hs-var">topBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089053"><span class="hs-identifier hs-var">middleBonus</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089052"><span class="hs-identifier hs-var">bottomBonus</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-189"></span><span>      </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">6</span></span><span>
+</span><span id="line-190"></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="hs-number">3</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">6</span></span><span>
+</span><span id="line-191"></span><span>      </span><span id="local-6989586621679089044"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089044"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089044"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-192"></span><span class="annot"><a href="Game.Calc.html#comparePlayers"><span class="hs-identifier hs-var">comparePlayers</span></a></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">PlayerInput
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; LineCompareResult
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Failed to compare&quot;</span></span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span class="annot"><a href="Game.Calc.html#foldPoints"><span class="hs-identifier hs-type">foldPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-195"></span><span id="foldPoints"><span class="annot"><span class="annottext">foldPoints :: [(Int, Int)] -&gt; Int
+</span><a href="Game.Calc.html#foldPoints"><span class="hs-identifier hs-var hs-var">foldPoints</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-196"></span><span class="annot"><a href="Game.Calc.html#foldPoints"><span class="hs-identifier hs-var">foldPoints</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621679089043"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089043"><span class="hs-identifier hs-var">r1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679089042"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089042"><span class="hs-identifier hs-var">r2</span></a></span></span><span class="hs-special">)</span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679089041"><span class="annot"><span class="annottext">[(Int, Int)]
+</span><a href="#local-6989586621679089041"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089043"><span class="hs-identifier hs-var">r1</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089042"><span class="hs-identifier hs-var">r2</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">[(Int, Int)] -&gt; Int
+</span><a href="Game.Calc.html#foldPoints"><span class="hs-identifier hs-var">foldPoints</span></a></span><span> </span><span class="annot"><span class="annottext">[(Int, Int)]
+</span><a href="#local-6989586621679089041"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span class="annot"><a href="Game.Calc.html#middlePoints"><span class="hs-identifier hs-type">middlePoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span>
+</span><span id="line-199"></span><span id="middlePoints"><span class="annot"><span class="annottext">middlePoints :: [Int]
+</span><a href="Game.Calc.html#middlePoints"><span class="hs-identifier hs-var hs-var">middlePoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">4</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">12</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">20</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">30</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">50</span></span><span class="hs-special">]</span><span>
+</span><span id="line-200"></span><span>
+</span><span id="line-201"></span><span class="annot"><a href="Game.Calc.html#bottomPoints"><span class="hs-identifier hs-type">bottomPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span>
+</span><span id="line-202"></span><span id="bottomPoints"><span class="annot"><span class="annottext">bottomPoints :: [Int]
+</span><a href="Game.Calc.html#bottomPoints"><span class="hs-identifier hs-var hs-var">bottomPoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Int) -&gt; [Int] -&gt; [Int]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679089038"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089038"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089038"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679089038"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="Game.Calc.html#middlePoints"><span class="hs-identifier hs-var">middlePoints</span></a></span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span class="annot"><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-type">getPoints</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Game.Calc.html#LineType"><span class="hs-identifier hs-type">LineType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Combination.html#Combination"><span class="hs-identifier hs-type">Combination</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-205"></span><span id="getPoints"><span class="annot"><span class="annottext">getPoints :: LineType -&gt; Combination -&gt; Int
+</span><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var hs-var">getPoints</span></a></span></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Game.Combination.html#RankCombination"><span class="hs-identifier hs-type">RankCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#Pair"><span class="hs-identifier hs-var">Pair</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span id="local-6989586621679089036"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679089036"><span class="hs-identifier hs-var">rank</span></a></span></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-206"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Int
+forall a. Enum a =&gt; a -&gt; Int
+</span><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679089036"><span class="hs-identifier hs-var">rank</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">4</span></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Int
+forall a. Enum a =&gt; a -&gt; Int
+</span><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679089036"><span class="hs-identifier hs-var">rank</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-207"></span><span class="annot"><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Game.Combination.html#RankCombination"><span class="hs-identifier hs-type">RankCombination</span></a></span><span> </span><span class="annot"><span class="annottext">CombinationName
+</span><a href="Game.Combination.html#Set"><span class="hs-identifier hs-var">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span> </span><span id="local-6989586621679089033"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679089033"><span class="hs-identifier hs-var">rank</span></a></span></span><span> </span><span class="annot"><span class="annottext">Suit
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Int
+forall a. Enum a =&gt; a -&gt; Int
+</span><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679089033"><span class="hs-identifier hs-var">rank</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">10</span></span><span>
+</span><span id="line-208"></span><span class="annot"><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Top"><span class="hs-identifier hs-var">Top</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-209"></span><span class="annot"><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Middle"><span class="hs-identifier hs-var">Middle</span></a></span><span> </span><span id="local-6989586621679089032"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089032"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="Game.Calc.html#middlePoints"><span class="hs-identifier hs-var">middlePoints</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Int -&gt; Int
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Int
+forall a. Enum a =&gt; a -&gt; Int
+</span><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Combination -&gt; CombinationName
+</span><a href="Game.Combination.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089032"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-210"></span><span class="annot"><a href="Game.Calc.html#getPoints"><span class="hs-identifier hs-var">getPoints</span></a></span><span> </span><span class="annot"><span class="annottext">LineType
+</span><a href="Game.Calc.html#Bottom"><span class="hs-identifier hs-var">Bottom</span></a></span><span> </span><span id="local-6989586621679089030"><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089030"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="Game.Calc.html#bottomPoints"><span class="hs-identifier hs-var">bottomPoints</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Int -&gt; Int
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">CombinationName -&gt; Int
+forall a. Enum a =&gt; a -&gt; Int
+</span><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Combination -&gt; CombinationName
+</span><a href="Game.Combination.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Combination
+</span><a href="#local-6989586621679089030"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-211"></span></pre></body></html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | User board and its processing methods</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Game.Board</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Cards.html"><span class="hs-identifier">CardParts.Cards</span></a></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier">Card</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="CardParts.Cards.html#parseCard"><span class="hs-identifier">parseCard</span></a></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Values.html"><span class="hs-identifier">CardParts.Values</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Values.html#Value"><span class="hs-identifier">Value</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="CardParts.Suits.html"><span class="hs-identifier">CardParts.Suits</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="CardParts.Suits.html#Suit"><span class="hs-identifier">Suit</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">isLeft</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">nub</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">elemIndex</span></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- | Parsed card result wrapper which also holds the possible err msg</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">type</span><span> </span><span id="CardParseResult"><span class="annot"><a href="Game.Board.html#CardParseResult"><span class="hs-identifier hs-var">CardParseResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- | Shorthand for board type</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">type</span><span> </span><span id="Board"><span class="annot"><a href="Game.Board.html#Board"><span class="hs-identifier hs-var">Board</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">{- | This method gets a list of strings which items represents a card notation.
+Returns 'Either' type, where 'Left' is 'String' with error message,
+and 'Right' is 'Board' type.
+Processes only list of length 13.
+Method is going to fail the list with duplicates.
+
+__Examples:__
+
+@
+cards = [
+    \&quot;Ah\&quot;, \&quot;Qd\&quot;, \&quot;Kc\&quot;,
+    \&quot;Ts\&quot;, \&quot;Jc\&quot;, &quot;6h&quot;, &quot;2h&quot;, &quot;3h&quot;,
+    &quot;8c&quot;, &quot;4c&quot;, &quot;7s&quot;, &quot;9c&quot;, \&quot;Tc\&quot;
+]
+getUserBoard cards = 'Right' [
+    [
+        'Card' {value = Ace, suit = Hearts},
+        'Card' {value = Queen, suit = Diamonds},
+        'Card' {value = King, suit = Clubs}
+    ],
+    [
+        'Card' {value = Ten, suit = Spades},
+        'Card' {value = Jack, suit = Clubs},
+        'Card' {value = Six, suit = Hearts},
+        'Card' {value = Two, suit = Hearts},
+        'Card' {value = Three, suit = Hearts}
+    ],
+    [
+        'Card' {value = Eight, suit = Clubs},
+        'Card' {value = Four, suit = Clubs},
+        'Card' {value = Seven, suit = Spades},
+        'Card' {value = Nine, suit = Clubs},
+        'Card' {value = Ten, suit = Clubs}
+    ]
+]
+
+cardsTwo = [
+    \&quot;Az\&quot;, \&quot;Qx\&quot;, \&quot;Kf\&quot;,
+    \&quot;Xs\&quot;, \&quot;Jc\&quot;, &quot;6h&quot;, &quot;2h&quot;, &quot;3h&quot;,
+    &quot;8c&quot;, &quot;4c&quot;, &quot;7s&quot;, &quot;9c&quot;, \&quot;Tc\&quot;
+]
+getUserBoard cardsTwo = 'Left'
+    &quot;Some cards failed to be parsed:
+    There is no card suit marked as \'z\';
+    There is no card suit marked as \'x\';
+    There is no card suit marked as \'f\';
+    There is no broadway card, which could be represented with \'X\';&quot;
+@
+-}</span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Game.Board.html#getUserBoard"><span class="hs-identifier hs-type">getUserBoard</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Game.Board.html#Board"><span class="hs-identifier hs-type">Board</span></a></span><span>
+</span><span id="line-65"></span><span id="getUserBoard"><span class="annot"><span class="annottext">getUserBoard :: [String] -&gt; Either String Board
+</span><a href="Game.Board.html#getUserBoard"><span class="hs-identifier hs-var hs-var">getUserBoard</span></a></span></span><span> </span><span id="local-6989586621679088730"><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088730"><span class="hs-identifier hs-var">full</span></a></span></span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088730"><span class="hs-identifier hs-var">full</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">13</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Board
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;List length should be 13&quot;</span></span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; Bool -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088725"><span class="hs-identifier hs-var">boardDuplicates</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Board
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String Board) -&gt; String -&gt; Either String Board
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Duplicates ocurred: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088725"><span class="hs-identifier hs-var">boardDuplicates</span></a></span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; Bool -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[CardParseResult] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[CardParseResult]
+</span><a href="#local-6989586621679088724"><span class="hs-identifier hs-var">failedCards</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Board
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088723"><span class="hs-identifier hs-var">failedCardsErrMsg</span></a></span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Board -&gt; Either String Board
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Board -&gt; Either String Board) -&gt; Board -&gt; Either String Board
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Card] -&gt; Board
+</span><a href="#local-6989586621679088722"><span class="hs-identifier hs-var">getLines</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Card
+</span><a href="#local-6989586621679088721"><span class="hs-identifier hs-var">card</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679088721"><span class="annot"><span class="annottext">Card
+</span><a href="#local-6989586621679088721"><span class="hs-identifier hs-var">card</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[CardParseResult]
+</span><a href="#local-6989586621679088720"><span class="hs-identifier hs-var">parsedCards</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>        </span><span class="hs-comment">-- | Function which calculates list duplicates</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><a href="#local-6989586621679088719"><span class="hs-identifier hs-type">getDuplicates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span>
+</span><span id="line-73"></span><span>        </span><span id="local-6989586621679088719"><span class="annot"><span class="annottext">getDuplicates :: [String] -&gt; [String]
+</span><a href="#local-6989586621679088719"><span class="hs-identifier hs-var hs-var">getDuplicates</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-74"></span><span>        </span><span class="annot"><a href="#local-6989586621679088719"><span class="hs-identifier hs-var">getDuplicates</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679088718"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088718"><span class="hs-identifier hs-var">x</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679088717"><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088717"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088718"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; Maybe Int
+forall a. Eq a =&gt; a -&gt; [a] -&gt; Maybe Int
+</span><span class="hs-operator hs-var">`elemIndex`</span></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088717"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-75"></span><span>            </span><span class="annot"><span class="annottext">Maybe Int
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; [String]
+</span><a href="#local-6989586621679088719"><span class="hs-identifier hs-var">getDuplicates</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088717"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-76"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679088716"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088716"><span class="hs-identifier hs-var">el</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; [String]
+forall a. Eq a =&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">nub</span></span><span> </span><span class="annot"><span class="annottext">([String] -&gt; [String]) -&gt; [String] -&gt; [String]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088718"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; [String]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; [String]
+</span><a href="#local-6989586621679088719"><span class="hs-identifier hs-var">getDuplicates</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088717"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span>        </span><span class="hs-comment">-- | Shorthand for list duplicates</span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><a href="#local-6989586621679088725"><span class="hs-identifier hs-type">boardDuplicates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-80"></span><span>        </span><span id="local-6989586621679088725"><span class="annot"><span class="annottext">boardDuplicates :: String
+</span><a href="#local-6989586621679088725"><span class="hs-identifier hs-var hs-var">boardDuplicates</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; String) -&gt; [String] -&gt; String
+forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
+</span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;; &quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([String] -&gt; String) -&gt; [String] -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; [String]
+</span><a href="#local-6989586621679088719"><span class="hs-identifier hs-var">getDuplicates</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088730"><span class="hs-identifier hs-var">full</span></a></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span>        </span><span class="hs-comment">-- | Function which calculates whether list contains duplicates</span><span>
+</span><span id="line-83"></span><span>        </span><span class="annot"><a href="#local-6989586621679088714"><span class="hs-identifier hs-type">containsDuplicates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-84"></span><span>        </span><span id="local-6989586621679088714"><span class="annot"><span class="annottext">containsDuplicates :: [String] -&gt; Bool
+</span><a href="#local-6989586621679088714"><span class="hs-identifier hs-var hs-var">containsDuplicates</span></a></span></span><span> </span><span id="local-6989586621679088713"><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088713"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088713"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[String] -&gt; [String]
+forall a. Eq a =&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">nub</span></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088713"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span>        </span><span class="hs-comment">-- | Result of list of string card parsing, in form of a tuple</span><span>
+</span><span id="line-87"></span><span>        </span><span class="annot"><a href="#local-6989586621679088720"><span class="hs-identifier hs-type">parsedCards</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Board.html#CardParseResult"><span class="hs-identifier hs-type">CardParseResult</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-88"></span><span>        </span><span id="local-6989586621679088720"><span class="annot"><span class="annottext">parsedCards :: [CardParseResult]
+</span><a href="#local-6989586621679088720"><span class="hs-identifier hs-var hs-var">parsedCards</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; CardParseResult) -&gt; [String] -&gt; [CardParseResult]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; CardParseResult
+</span><a href="CardParts.Cards.html#parseCard"><span class="hs-identifier hs-var">parseCard</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
+</span><a href="#local-6989586621679088730"><span class="hs-identifier hs-var">full</span></a></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span>        </span><span class="hs-comment">-- | List of cards failed to being parsed</span><span>
+</span><span id="line-91"></span><span>        </span><span class="annot"><a href="#local-6989586621679088724"><span class="hs-identifier hs-type">failedCards</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Game.Board.html#CardParseResult"><span class="hs-identifier hs-type">CardParseResult</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-92"></span><span>        </span><span id="local-6989586621679088724"><span class="annot"><span class="annottext">failedCards :: [CardParseResult]
+</span><a href="#local-6989586621679088724"><span class="hs-identifier hs-var hs-var">failedCards</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CardParseResult -&gt; Bool) -&gt; [CardParseResult] -&gt; [CardParseResult]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">CardParseResult -&gt; Bool
+forall a b. Either a b -&gt; Bool
+</span><span class="hs-identifier hs-var">isLeft</span></span><span> </span><span class="annot"><span class="annottext">[CardParseResult]
+</span><a href="#local-6989586621679088720"><span class="hs-identifier hs-var">parsedCards</span></a></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span>        </span><span class="hs-comment">-- | Err message in case of failed cards</span><span>
+</span><span id="line-95"></span><span>        </span><span class="annot"><a href="#local-6989586621679088723"><span class="hs-identifier hs-type">failedCardsErrMsg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-96"></span><span>        </span><span id="local-6989586621679088723"><span class="annot"><span class="annottext">failedCardsErrMsg :: String
+</span><a href="#local-6989586621679088723"><span class="hs-identifier hs-var hs-var">failedCardsErrMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Some cards failed to be parsed: &quot;</span></span><span>
+</span><span id="line-97"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">concat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088711"><span class="hs-identifier hs-var">errMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;; &quot;</span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679088711"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679088711"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[CardParseResult]
+</span><a href="#local-6989586621679088724"><span class="hs-identifier hs-var">failedCards</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span>        </span><span class="hs-comment">-- | Get sublist with given number of elements from given starting point</span><span>
+</span><span id="line-100"></span><span>        </span><span id="local-6989586621679088738"><span class="annot"><a href="#local-6989586621679088710"><span class="hs-identifier hs-type">getSublist</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679088738"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679088738"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-101"></span><span>        </span><span id="local-6989586621679088710"><span class="annot"><span class="annottext">getSublist :: [a] -&gt; Int -&gt; Int -&gt; [a]
+</span><a href="#local-6989586621679088710"><span class="hs-identifier hs-var hs-var">getSublist</span></a></span></span><span> </span><span id="local-6989586621679088709"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621679088709"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span id="local-6989586621679088708"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088708"><span class="hs-identifier hs-var">from</span></a></span></span><span> </span><span id="local-6989586621679088707"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088707"><span class="hs-identifier hs-var">count</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [a] -&gt; [a]
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">take</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088707"><span class="hs-identifier hs-var">count</span></a></span><span> </span><span class="annot"><span class="annottext">([a] -&gt; [a]) -&gt; [a] -&gt; [a]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; [a] -&gt; [a]
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679088708"><span class="hs-identifier hs-var">from</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621679088709"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span>        </span><span class="hs-comment">-- | Split list of cards into three lines</span><span>
+</span><span id="line-104"></span><span>        </span><span class="annot"><a href="#local-6989586621679088722"><span class="hs-identifier hs-type">getLines</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="CardParts.Cards.html#Card"><span class="hs-identifier hs-type">Card</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Game.Board.html#Board"><span class="hs-identifier hs-type">Board</span></a></span><span>
+</span><span id="line-105"></span><span>        </span><span id="local-6989586621679088722"><span class="annot"><span class="annottext">getLines :: [Card] -&gt; Board
+</span><a href="#local-6989586621679088722"><span class="hs-identifier hs-var hs-var">getLines</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-106"></span><span>        </span><span class="annot"><a href="#local-6989586621679088722"><span class="hs-identifier hs-var">getLines</span></a></span><span> </span><span id="local-6989586621679088704"><span class="annot"><span class="annottext">[Card]
+</span><a href="#local-6989586621679088704"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[Card] -&gt; Int -&gt; Int -&gt; [Card]
+forall a. [a] -&gt; Int -&gt; Int -&gt; [a]
+</span><a href="#local-6989586621679088710"><span class="hs-identifier hs-var">getSublist</span></a></span><span> </span><span class="annot"><span class="annottext">[Card]
+</span><a href="#local-6989586621679088704"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Card] -&gt; Int -&gt; Int -&gt; [Card]
+forall a. [a] -&gt; Int -&gt; Int -&gt; [a]
+</span><a href="#local-6989586621679088710"><span class="hs-identifier hs-var">getSublist</span></a></span><span> </span><span class="annot"><span class="annottext">[Card]
+</span><a href="#local-6989586621679088704"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">5</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Card] -&gt; Int -&gt; Int -&gt; [Card]
+forall a. [a] -&gt; Int -&gt; Int -&gt; [a]
+</span><a href="#local-6989586621679088710"><span class="hs-identifier hs-var">getSublist</span></a></span><span> </span><span class="annot"><span class="annottext">[Card]
+</span><a href="#local-6989586621679088704"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">5</span></span><span class="hs-special">]</span><span>
+</span><span id="line-107"></span><span>        </span></pre></body></html>
