@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use bimap" #-}
-module Game.Calc(PlayerInput(..), LineResult, LineType(..), PlayerCalculations(..), updateTotals, comparePlayers, collectCompares) where
+module Game.Calc(PlayerInput(..), LineResult, LineType(..), PlayerCalculations(..), comparePlayers, calcGame) where
 import CardParts.Cards (Card(..))
 import Game.Combination
     ( Combination,
@@ -33,12 +33,8 @@ type LineCompareResult = (Int, Int)
 data LineResult = LineResult {
     lineType :: LineType,
     combination :: Combination,
-    points :: Int,
-    result :: LineCompareResult
+    points :: Int
 } deriving (Show, Generic)
-
-updateLineResult :: LineResult -> LineCompareResult -> LineResult
-updateLineResult line cmpResult = line { result = cmpResult }
 
 instance FromJSON LineResult
 instance ToJSON LineResult
@@ -50,19 +46,19 @@ data PlayerCalculations = PlayerCalculations {
     bottom :: LineResult,
     isScoop :: Bool,
     isNextFantasy :: Bool,
-    totalDetailed :: LineCompareResult,
+    totalDetailed :: (String, [([String], Int, Int, [(Int, Int)])]),
     total :: Int
 } deriving (Generic)
 
 instance FromJSON PlayerCalculations
 instance ToJSON PlayerCalculations
 
-updateTotals :: PlayerCalculations -> PlayerCalculations -> PlayerCalculations
-updateTotals prevResult nextResult = prevResult {
-  totalDetailed = totalDetailedSummary,
-  total = uncurry (+) totalDetailedSummary
-  } where
-    totalDetailedSummary = totalDetailed prevResult `addTuples` totalDetailed nextResult
+-- updateTotals :: PlayerCalculations -> PlayerCalculations -> PlayerCalculations
+-- updateTotals prevResult nextResult = prevResult {
+--   totalDetailed = totalDetailedSummary,
+--   total = uncurry (+) totalDetailedSummary
+--   } where
+--     totalDetailedSummary = totalDetailed prevResult `addTuples` totalDetailed nextResult
 
 -- calcPlayer :: PlayerInput -> PlayerCalculations
 -- calcPlayer input@PlayerInput{ board = (top:middle:bottom:xs) } = PlayerCalculations {
@@ -86,9 +82,42 @@ updateTotals prevResult nextResult = prevResult {
 
 -- collectCompares :: [([String], Int, Int)] -> [PlayerInput] -> [(String, Int, Int)]
 -- collectCompares :: (String, (t String, b, c)) -> [PlayerInput] -> (String, [([String], Int, Int, [(Int, Int)])])
-collectCompares :: [([String], Int, Int, [(Int, Int)])] -> [PlayerInput] -> [PlayerInput] -> [(String, [([String], Int, Int, [(Int, Int)])])]
-collectCompares acc full (currPlayer:players) =
-  (username currPlayer, map (getResult currPlayer) otherInputs) : collectCompares (acc ++ map (getResult currPlayer) otherInputs) full players
+calcGame :: [PlayerInput] -> [PlayerCalculations]
+calcGame playerInputs
+  | length playerInputs /= 3 = error "Invalid number of players"
+  | length linesResults /= 3 = error "Invalid number of linesResults"
+  | otherwise = map mapLinesResults [0..2]
+  where
+    linesResults = collectLinesResults [] playerInputs playerInputs
+    mapLinesResults index = PlayerCalculations {
+      player = playerInputs !! index,
+      isScoop = scoop $ playerInputs !! index,
+      isNextFantasy = False,
+      top = LineResult {
+        combination = combinationByIndex (playerInputs !! index) 0, -- top line has index 0,
+        lineType = Top,
+        points = getPoints Top (combinationByIndex (playerInputs !! index) 0)
+      },
+      middle = LineResult {
+        combination = combinationByIndex (playerInputs !! index) 1, -- middle line has index 1,
+        lineType = Middle,
+        points = getPoints Middle (combinationByIndex (playerInputs !! index) 1)
+      },
+      bottom = LineResult {
+        combination = combinationByIndex (playerInputs !! index) 2, -- bottom line has index 2,
+        lineType = Bottom,
+        points = getPoints Bottom (combinationByIndex (playerInputs !! index) 2)
+      },
+      totalDetailed = linesResults !! index,
+      total = totalPoints (linesResults !! index)
+      }
+    combinationByIndex playerInput index = board playerInput !! index
+    getTotal (_, combo, bonus, _) = combo + bonus
+    totalPoints (_, compareResults) = foldl (\acc r -> acc + getTotal r) 0 compareResults
+
+collectLinesResults :: [([String], Int, Int, [(Int, Int)])] -> [PlayerInput] -> [PlayerInput] -> [(String, [([String], Int, Int, [(Int, Int)])])]
+collectLinesResults acc full (currPlayer:players) =
+  (username currPlayer, map (getResult currPlayer) otherInputs) : collectLinesResults (acc ++ map (getResult currPlayer) otherInputs) full players
     where
       otherInputs = filter (\player -> username player /= username currPlayer) full
 
@@ -99,7 +128,7 @@ collectCompares acc full (currPlayer:players) =
       getResult player1 player2 = case find (\(usernames, _, _, _) -> usernames == [username player2, username player2] ) acc of
         Just (usernames, combo, bonus, debug) -> (reverse usernames, negate combo, negate bonus, map negateTuple debug)
         _ -> comparePlayers player1 player2
-collectCompares acc _ [] = []
+collectLinesResults acc _ [] = []
 
 comparePlayers :: PlayerInput -> PlayerInput -> ([String], Int, Int, [(Int, Int)])
 comparePlayers
@@ -213,13 +242,13 @@ comparePlayersPoints scoops@(firstScoop, secondScoop) line1 line2 = (
 
 --       getOppositeResult (combPoints, bonusPoints) = (negate combPoints, negate bonusPoints)
 
-getLineResult :: LineType -> Combination -> LineResult
-getLineResult lineType combination = LineResult {
-    lineType = lineType,
-    combination = combination,
-    points = getPoints lineType combination,
-    result = (0, 0)
-}
+-- getLineResult :: LineType -> Combination -> LineResult
+-- getLineResult lineType combination = LineResult {
+--     lineType = lineType,
+--     combination = combination,
+--     points = getPoints lineType combination,
+--     result = (0, 0)
+-- }
 
 middlePoints :: [Int]
 middlePoints = [0, 0, 0, 2, 4, 8, 12, 20, 30, 50]

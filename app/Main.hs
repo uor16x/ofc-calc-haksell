@@ -10,7 +10,7 @@ import CardParts.Cards (Card(..))
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON, encode)
 import qualified Game.Calc (PlayerInput (..), PlayerCalculations(..))
-import Game.Calc ( PlayerInput(PlayerInput), updateTotals, comparePlayers, collectCompares )
+import Game.Calc ( PlayerInput(PlayerInput), comparePlayers, calcGame )
 
 data Input = InitialInput { username :: String, strs :: [String] }
     | BoardInput { username :: String, board :: [[Card]] }
@@ -34,7 +34,7 @@ parse userInput = do
     board <- mapM parseInputCards $ parseInput userInput
     parsedBoard <- mapM parseBoard board
     playersCalculated <- mapM calcBoard parsedBoard
-    Right $ collectCompares [] playersCalculated playersCalculated
+    Right $ calcGame playersCalculated
     -- Right [
     --   comparePlayers (head playersCalculated) (head $ tail playersCalculated),
     --   comparePlayers (head $ tail playersCalculated) (last playersCalculated),
