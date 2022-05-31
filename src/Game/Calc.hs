@@ -54,35 +54,6 @@ data PlayerCalculations = PlayerCalculations {
 instance FromJSON PlayerCalculations
 instance ToJSON PlayerCalculations
 
--- updateTotals :: PlayerCalculations -> PlayerCalculations -> PlayerCalculations
--- updateTotals prevResult nextResult = prevResult {
---   totalDetailed = totalDetailedSummary,
---   total = uncurry (+) totalDetailedSummary
---   } where
---     totalDetailedSummary = totalDetailed prevResult `addTuples` totalDetailed nextResult
-
--- calcPlayer :: PlayerInput -> PlayerCalculations
--- calcPlayer input@PlayerInput{ board = (top:middle:bottom:xs) } = PlayerCalculations {
---     player = input,
---     top = getLineResult scoop Top top,
---     middle = getLineResult scoop Middle middle,
---     bottom = getLineResult scoop Bottom bottom,
---     scoop = scoop,
---     nextFantasy =
---       not scoop &&
---       (
---         top >= RankCombination Pair (Card Queen Hearts) ||
---         middle >= PartCombination FullHouse (Card Two Hearts) (Card Three Hearts) ||
---         bottom >= RankCombination FourOfAKind (Card Two Hearts)
---       ),
---     totalDetailed = (0, 0),
---     total = 0
--- } where
---   scoop = top > middle || middle > bottom
--- calcPlayer _ = error "Invalid usage of calcPlayer"
-
--- collectCompares :: [([String], Int, Int)] -> [PlayerInput] -> [(String, Int, Int)]
--- collectCompares :: (String, (t String, b, c)) -> [PlayerInput] -> (String, [([String], Int, Int, [(Int, Int)])])
 calcGame :: [PlayerInput] -> [PlayerCalculations]
 calcGame playerInputs
   | length playerInputs /= 3 = error "Invalid number of players"
@@ -192,79 +163,11 @@ comparePlayers
       3 -> 6
       (-3) -> -6
       b -> b
-
 comparePlayers _ _ = error "Failed to compare"
 
 foldPoints :: [(Int, Int)] -> Int
 foldPoints [] = 0
 foldPoints ((r1, r2):xs) = (r1 - r2) + foldPoints xs
-
-comparePlayersPoints :: (Bool, Bool) -> LineResult -> LineResult -> LineCompareResult
-comparePlayersPoints scoops@(firstScoop, secondScoop) line1 line2 = (
-  combo,
-  bonus
-  ) where
-    combo :: Int
-    combo = case scoops of
-      (True, True) -> 0
-      (True, False) -> negate $ points line2
-      (False, True) -> points line1
-      (False, False) -> points line1 - points line2
-
-    bonus :: Int
-    bonus = case scoops of
-      (True, True) -> 0
-      (True, False) -> -1
-      (False, True) -> 1
-      (False, False) -> if combination line1 > combination line2
-        then 1
-        else (-1)
-
--- type PairOfPlayers = (PlayerCalculations, PlayerCalculations)
--- comparePairOfPlayers :: PairOfPlayers -> PairOfPlayers
--- comparePairOfPlayers (p1, p2) = (
---     PlayerCalculations {
---       player = player p1,
---       isScoop = isScoop p1,
---       isNextFantasy = isNextFantasy p1,
---       top = updateLineResult (top p1) topCompared,
---       middle = updateLineResult (middle p1) middleCompared,
---       bottom = updateLineResult (bottom p1) bottomCompared,
---       totalDetailed = totalDetailedPoints,
---       total = uncurry (+) totalDetailedPoints
---       },
---     PlayerCalculations {
---       player = player p2,
---       isScoop = isScoop p2,
---       isNextFantasy = isNextFantasy p2,
---       top = updateLineResult (top p2) $ getOppositeResult topCompared,
---       middle = updateLineResult (middle p2) $ getOppositeResult middleCompared,
---       bottom = updateLineResult (bottom p2) $ getOppositeResult bottomCompared,
---       totalDetailed = getOppositeResult totalDetailedPoints,
---       total = negate $ uncurry (+) totalDetailedPoints
---     }
---   ) where
---       topCompared = comparePlayersPoints (isScoop p1, isScoop p2) (top p1) (top p2)
---       middleCompared = comparePlayersPoints (isScoop p1, isScoop p2) (middle p1) (middle p2)
---       bottomCompared = comparePlayersPoints (isScoop p1, isScoop p2) (bottom p1) (bottom p2)
-
---       transformWonAll pointsTuple
---         | snd pointsTuple == 3 = (fst pointsTuple, snd pointsTuple + 3)
---         | snd pointsTuple == (-3) = (fst pointsTuple, snd pointsTuple - 3)
---         | otherwise = pointsTuple
-
---       totalDetailedPoints = transformWonAll $
---         topCompared `addTuples` middleCompared `addTuples` bottomCompared
-
---       getOppositeResult (combPoints, bonusPoints) = (negate combPoints, negate bonusPoints)
-
--- getLineResult :: LineType -> Combination -> LineResult
--- getLineResult lineType combination = LineResult {
---     lineType = lineType,
---     combination = combination,
---     points = getPoints lineType combination,
---     result = (0, 0)
--- }
 
 middlePoints :: [Int]
 middlePoints = [0, 0, 0, 2, 4, 8, 12, 20, 30, 50]
@@ -279,6 +182,3 @@ getPoints Top (RankCombination Set (Card rank _)) = fromEnum rank + 10
 getPoints Top _ = 0
 getPoints Middle c = middlePoints !! fromEnum (name c)
 getPoints Bottom c = bottomPoints !! fromEnum (name c)
-
-addTuples :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
-addTuples r1 r2 = (fst r1 + fst r2, snd r1 + snd r2)
