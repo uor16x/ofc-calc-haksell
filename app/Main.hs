@@ -37,13 +37,6 @@ parse userInput = do
     parsedBoard <- mapM parseBoard board
     playersCalculated <- mapM calcBoard parsedBoard
     Right $ calcGame playersCalculated
-    -- Right [
-    --   comparePlayers (head playersCalculated) (head $ tail playersCalculated),
-    --   comparePlayers (head $ tail playersCalculated) (last playersCalculated),
-    --   comparePlayers (last playersCalculated) (head playersCalculated)
-    --   ]
-    -- Right $ calcGame [] playersCalculated
-    -- Right $ calcUsers $ calcSteps playersCalculated
       where
         calcBoard :: Input -> Either String Game.Calc.PlayerInput
         calcBoard inp = Right $
@@ -52,27 +45,6 @@ parse userInput = do
           (combinations inp)
           (scoop inp)
           (withFantasy inp)
-
-        -- calcSteps :: [Game.Calc.PlayerCalculations] -> [(Game.Calc.PlayerCalculations, Game.Calc.PlayerCalculations)]
-        -- calcSteps (p1:p2:p3:_) = [
-        --     comparePairOfPlayers(p1, p2),
-        --     comparePairOfPlayers(p2, p3),
-        --     comparePairOfPlayers(p3, p1)
-        --   ]
-        -- calcSteps _ = error "Wrong size of calcSteps input array"
-
-        -- calcUsers :: [(Game.Calc.PlayerCalculations, Game.Calc.PlayerCalculations)] -> [Game.Calc.PlayerCalculations]
-        -- calcUsers ((p1r1, p2r1) : (p2r2, p3r1) : (p3r2, p1r2) : _) = [
-        --   updateTotals p1r1 p1r2,
-        --   updateTotals p2r1 p2r2,
-        --   updateTotals p3r1 p3r2
-        --  ]
-        -- calcUsers _ = error "Wrong size of calcUsers input array"
-
-        -- firstUserResult p1 p2 p3 = comparePairOfPlayers (fst $ comparePairOfPlayers (p1, p2), p3)
-        -- secondUserResult p1 p2 p3 = comparePairOfPlayers (snd $ comparePairOfPlayers (p1, p2), snd $ firstUserResult p1 p2 p3)
-        -- thirdUserResult p1 p2 p3 = comparePairOfPlayers (fst $ firstUserResult p1 p2 p3, snd $ secondUserResult p1 p2 p3)
-
 
 parseInput :: String -> [Input]
 parseInput args =
