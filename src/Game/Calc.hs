@@ -29,7 +29,7 @@ data LineType = Top | Middle | Bottom deriving (Show, Generic)
 instance FromJSON LineType
 instance ToJSON LineType
 
-type LineCompareResult = (Int, Int)
+type LineCompareResult = ([String], Int, Int, [(Int, Int)])
 
 data LineResult = LineResult {
     lineType :: LineType,
@@ -47,7 +47,7 @@ data PlayerCalculations = PlayerCalculations {
     bottom :: LineResult,
     isScoop :: Bool,
     isNextFantasy :: Bool,
-    totalDetailed :: (String, [([String], Int, Int, [(Int, Int)])]),
+    totalDetailed :: (String, [LineCompareResult]),
     total :: Int
 } deriving (Generic)
 
@@ -60,7 +60,10 @@ calcGame playerInputs
   | length linesResults /= 3 = error "Invalid number of linesResults"
   | otherwise = map mapLinesResults [0..2]
   where
+    linesResults :: [(String, [LineCompareResult])]
     linesResults = collectLinesResults [] playerInputs playerInputs
+
+    mapLinesResults :: Int -> PlayerCalculations
     mapLinesResults index = PlayerCalculations {
       player = playerInputs !! index,
       isScoop = scoop $ playerInputs !! index,
@@ -86,8 +89,14 @@ calcGame playerInputs
       totalDetailed = linesResults !! index,
       total = totalPoints (linesResults !! index)
       }
+
+    combinationByIndex :: PlayerInput -> Int -> Combination
     combinationByIndex playerInput index = board playerInput !! index
+
+    getTotal :: LineCompareResult -> Int
     getTotal (_, combo, bonus, _) = combo + bonus
+
+    totalPoints ::  (String, [LineCompareResult]) -> Int
     totalPoints (_, compareResults) = foldl (\acc r -> acc + getTotal r) 0 compareResults
 
     nextIsFantasy :: Bool -> [Combination] -> Bool
@@ -102,10 +111,11 @@ calcGame playerInputs
         || bottom >= RankCombination StraightFlush (Card Five Hearts)
     nextIsFantasy withFantasy _ = error "Invalid number of lines for fantasy calc"
 
-collectLinesResults :: [([String], Int, Int, [(Int, Int)])] -> [PlayerInput] -> [PlayerInput] -> [(String, [([String], Int, Int, [(Int, Int)])])]
+collectLinesResults :: [LineCompareResult] -> [PlayerInput] -> [PlayerInput] -> [(String, [LineCompareResult])]
 collectLinesResults acc full (currPlayer:players) =
   (username currPlayer, map (getResult currPlayer) otherInputs) : collectLinesResults (acc ++ map (getResult currPlayer) otherInputs) full players
     where
+      otherInputs :: [PlayerInput]
       otherInputs = filter (\player -> username player /= username currPlayer) full
 
       negateTuple :: (Int, Int) -> (Int, Int)
@@ -117,7 +127,9 @@ collectLinesResults acc full (currPlayer:players) =
         _ -> comparePlayers player1 player2
 collectLinesResults acc _ [] = []
 
-comparePlayers :: PlayerInput -> PlayerInput -> ([String], Int, Int, [(Int, Int)])
+type IntPair = (Int, Int)
+
+comparePlayers :: PlayerInput -> PlayerInput -> LineCompareResult
 comparePlayers
   p1@PlayerInput{ username = p1name, board = (p1top:p1middle:p1bottom:_), scoop = p1scoop }
   p2@PlayerInput{ username = p2name, board = (p2top:p2middle:p2bottom:_), scoop = p2scoop } = (
@@ -130,14 +142,19 @@ comparePlayers
       (fst bottomPoints, bottomBonus)
     ]
   ) where
+    topPoints :: IntPair
     topPoints = (
       if p1scoop then 0 else getPoints Top p1top,
       if p2scoop then 0 else getPoints Top p2top
       )
+
+    middlePoints :: IntPair
     middlePoints = (
       if p1scoop then 0 else getPoints Middle p1middle,
       if p2scoop then 0 else getPoints Middle p2middle
       )
+
+    bottomPoints :: IntPair
     bottomPoints = (
       if p1scoop then 0 else getPoints Bottom p1bottom,
       if p2scoop then 0 else getPoints Bottom p2bottom
@@ -155,10 +172,19 @@ comparePlayers
         then 1
         else (-1)
 
+    topBonus :: Int
     topBonus = getBonus p1top p2top
+
+    middleBonus :: Int
     middleBonus = getBonus p1middle p2middle
+
+    bottomBonus :: Int
     bottomBonus = getBonus p1bottom p2bottom
+
+    summBonus :: Int
     summBonus = topBonus + middleBonus + bottomBonus
+
+    bonusCalculated :: Int
     bonusCalculated = case topBonus + middleBonus + bottomBonus of
       3 -> 6
       (-3) -> -6
