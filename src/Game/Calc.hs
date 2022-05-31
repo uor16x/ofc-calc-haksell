@@ -17,7 +17,8 @@ import Data.List (find)
 data PlayerInput = PlayerInput {
     username :: String,
     board :: [Combination],
-    scoop :: Bool
+    scoop :: Bool,
+    withFantasy :: Bool
 } deriving (Show, Generic)
 
 instance FromJSON PlayerInput
@@ -92,7 +93,10 @@ calcGame playerInputs
     mapLinesResults index = PlayerCalculations {
       player = playerInputs !! index,
       isScoop = scoop $ playerInputs !! index,
-      isNextFantasy = False,
+      isNextFantasy =
+        nextIsFantasy
+        (withFantasy $ playerInputs !! index)
+        (board $ playerInputs !! index),
       top = LineResult {
         combination = combinationByIndex (playerInputs !! index) 0, -- top line has index 0,
         lineType = Top,
@@ -114,6 +118,18 @@ calcGame playerInputs
     combinationByIndex playerInput index = board playerInput !! index
     getTotal (_, combo, bonus, _) = combo + bonus
     totalPoints (_, compareResults) = foldl (\acc r -> acc + getTotal r) 0 compareResults
+
+    nextIsFantasy :: Bool -> [Combination] -> Bool
+    nextIsFantasy withFantasy (top:middle:bottom:_)
+      | withFantasy =
+        top >= RankCombination Set (Card Two Hearts)
+        || middle >= PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)
+        || bottom >= RankCombination FourOfAKind (Card Two Hearts)
+      | otherwise =
+        top >= RankCombination Pair (Card Queen Hearts)
+        || middle >= PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)
+        || bottom >= RankCombination StraightFlush (Card Five Hearts)
+    nextIsFantasy withFantasy _ = error "Invalid number of lines for fantasy calc"
 
 collectLinesResults :: [([String], Int, Int, [(Int, Int)])] -> [PlayerInput] -> [PlayerInput] -> [(String, [([String], Int, Int, [(Int, Int)])])]
 collectLinesResults acc full (currPlayer:players) =

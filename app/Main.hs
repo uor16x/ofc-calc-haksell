@@ -14,8 +14,8 @@ import Game.Calc ( PlayerInput(PlayerInput), comparePlayers, calcGame )
 import Debug.Trace (traceIO, trace)
 
 data Input = InitialInput { username :: String, withFantasy :: Bool, strs :: [String] }
-    | BoardInput { username :: String, board :: [[Card]] }
-    | CombinationInput { username :: String, scoop :: Bool, combinations :: [Combination] } deriving (Show, Generic)
+    | BoardInput { username :: String,  withFantasy :: Bool, board :: [[Card]] }
+    | CombinationInput { username :: String, scoop :: Bool, withFantasy :: Bool, combinations :: [Combination] } deriving (Show, Generic)
 
 instance FromJSON Input
 instance ToJSON Input
@@ -31,7 +31,7 @@ main = do
                 Left msg -> error msg
         _ -> error "Invalid number of arguments"
 
--- parse :: String -> Either String [Game.Calc.PlayerCalculations]
+parse :: String -> Either String [Game.Calc.PlayerCalculations]
 parse userInput = do
     board <- mapM parseInputCards $ parseInput userInput
     parsedBoard <- mapM parseBoard board
@@ -46,7 +46,12 @@ parse userInput = do
     -- Right $ calcUsers $ calcSteps playersCalculated
       where
         calcBoard :: Input -> Either String Game.Calc.PlayerInput
-        calcBoard inp = Right $ Game.Calc.PlayerInput (username inp) (combinations inp) (scoop inp)
+        calcBoard inp = Right $
+          Game.Calc.PlayerInput 
+          (username inp)
+          (combinations inp)
+          (scoop inp)
+          (withFantasy inp)
 
         -- calcSteps :: [Game.Calc.PlayerCalculations] -> [(Game.Calc.PlayerCalculations, Game.Calc.PlayerCalculations)]
         -- calcSteps (p1:p2:p3:_) = [
@@ -76,19 +81,21 @@ parseInput args =
   (read args :: [(String, Bool, [String])])
 
 parseInputCards :: Input -> Either String Input
-parseInputCards InitialInput { username = username, strs = strs } = case getUserBoard strs of
+parseInputCards InitialInput { username = username,  withFantasy = withFantasy, strs = strs } = case getUserBoard strs of
     Right board -> Right BoardInput {
         username = username,
+        withFantasy = withFantasy,
         board = board
     }
     Left msg -> Left $ "Parsing of input cards failed: " ++ msg
 parseInputCards _ = Left "Valid InitialInput should be passed here"
 
 parseBoard :: Input -> Either String Input
-parseBoard BoardInput { username = username, board = board } = case parsedCombinations of
+parseBoard BoardInput { username = username, withFantasy = withFantasy, board = board } = case parsedCombinations of
     Right result -> Right $ CombinationInput {
         username = username,
         combinations = result,
+        withFantasy = withFantasy,
         scoop = isScoop result
     }
     Left msg -> Left $ "Parsing of combinations failed: " ++ msg
