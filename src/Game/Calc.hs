@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use bimap" #-}
+{-# HLINT ignore "Use first" #-}
 module Game.Calc(PlayerInput(..), LineResult, LineType(..), PlayerCalculations(..), comparePlayers, calcGame) where
 import CardParts.Cards (Card(..))
 import Game.Combination
@@ -34,7 +35,9 @@ type LineCompareResult = ([String], Int, Int, [(Int, Int)])
 data LineResult = LineResult {
     lineType :: LineType,
     combination :: Combination,
-    points :: Int
+    points :: Int,
+    totalCombination :: Int,
+    totalBonus :: Int
 } deriving (Show, Generic)
 
 instance FromJSON LineResult
@@ -53,6 +56,8 @@ data PlayerCalculations = PlayerCalculations {
 
 instance FromJSON PlayerCalculations
 instance ToJSON PlayerCalculations
+
+type IntPair = (Int, Int)
 
 calcGame :: [PlayerInput] -> [PlayerCalculations]
 calcGame playerInputs
@@ -74,17 +79,23 @@ calcGame playerInputs
       top = LineResult {
         combination = combinationByIndex (playerInputs !! index) 0, -- top line has index 0,
         lineType = Top,
-        points = getPoints Top (combinationByIndex (playerInputs !! index) 0)
+        points = getPoints Top (combinationByIndex (playerInputs !! index) 0),
+        totalCombination = fst $ getLinePoints index 0,
+        totalBonus = snd $ getLinePoints index 0
       },
       middle = LineResult {
         combination = combinationByIndex (playerInputs !! index) 1, -- middle line has index 1,
         lineType = Middle,
-        points = getPoints Middle (combinationByIndex (playerInputs !! index) 1)
+        points = getPoints Middle (combinationByIndex (playerInputs !! index) 1),
+        totalCombination = fst $ getLinePoints index 1,
+        totalBonus = snd $ getLinePoints index 1
       },
       bottom = LineResult {
         combination = combinationByIndex (playerInputs !! index) 2, -- bottom line has index 2,
         lineType = Bottom,
-        points = getPoints Bottom (combinationByIndex (playerInputs !! index) 2)
+        points = getPoints Bottom (combinationByIndex (playerInputs !! index) 2),
+        totalCombination = fst $ getLinePoints index 2,
+        totalBonus = snd $ getLinePoints index 2
       },
       totalDetailed = linesResults !! index,
       total = totalPoints (linesResults !! index)
@@ -111,6 +122,13 @@ calcGame playerInputs
         || bottom >= RankCombination StraightFlush (Card Five Hearts)
     nextIsFantasy withFantasy _ = error "Invalid number of lines for fantasy calc"
 
+    getLinePoints :: Int -> Int -> IntPair
+    getLinePoints playerIndex lineIndex
+      = foldl
+        (\(comboAcc, bonusAcc) (_, _, _, debug) -> (comboAcc + fst (debug !! lineIndex), bonusAcc + snd (debug !! lineIndex)))
+        (0, 0)
+        (snd (linesResults !! playerIndex))
+
 collectLinesResults :: [LineCompareResult] -> [PlayerInput] -> [PlayerInput] -> [(String, [LineCompareResult])]
 collectLinesResults acc full (currPlayer:players) =
   (username currPlayer, map (getResult currPlayer) otherInputs) : collectLinesResults (acc ++ map (getResult currPlayer) otherInputs) full players
@@ -126,8 +144,6 @@ collectLinesResults acc full (currPlayer:players) =
         Just (usernames, combo, bonus, debug) -> (reverse usernames, negate combo, negate bonus, map negateTuple debug)
         _ -> comparePlayers player1 player2
 collectLinesResults acc _ [] = []
-
-type IntPair = (Int, Int)
 
 comparePlayers :: PlayerInput -> PlayerInput -> LineCompareResult
 comparePlayers
