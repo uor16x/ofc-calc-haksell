@@ -153,9 +153,9 @@ comparePlayers
     foldPoints [topPoints, middlePoints, bottomPoints],
     bonusCalculated,
     [
-      (fst topPoints, topBonus),
-      (fst middlePoints, middleBonus),
-      (fst bottomPoints, bottomBonus)
+      (uncurry (-) topPoints, topBonus),
+      (uncurry (-) middlePoints, middleBonus),
+      (uncurry (-) bottomPoints, bottomBonus)
     ]
   ) where
     topPoints :: IntPair
