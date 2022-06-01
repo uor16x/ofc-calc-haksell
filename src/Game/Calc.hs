@@ -77,23 +77,23 @@ calcGame playerInputs
         (withFantasy $ playerInputs !! index)
         (board $ playerInputs !! index),
       top = LineResult {
-        combination = combinationByIndex (playerInputs !! index) 0, -- top line has index 0,
+        combination = PartCombination FullHouse (Card Two Hearts) (Card Three Hearts), -- top line has index 0,
         lineType = Top,
-        points = getPoints Top (combinationByIndex (playerInputs !! index) 0),
+        points = getPoints Top (PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)),
         totalCombination = fst $ getLinePoints index 0,
         totalBonus = snd $ getLinePoints index 0
       },
       middle = LineResult {
-        combination = combinationByIndex (playerInputs !! index) 1, -- middle line has index 1,
+        combination = PartCombination FullHouse (Card Two Hearts) (Card Three Hearts), -- middle line has index 1,
         lineType = Middle,
-        points = getPoints Middle (combinationByIndex (playerInputs !! index) 1),
+        points = getPoints Middle (PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)),
         totalCombination = fst $ getLinePoints index 1,
         totalBonus = snd $ getLinePoints index 1
       },
       bottom = LineResult {
-        combination = combinationByIndex (playerInputs !! index) 2, -- bottom line has index 2,
+        combination = PartCombination FullHouse (Card Two Hearts) (Card Three Hearts), -- bottom line has index 2,
         lineType = Bottom,
-        points = getPoints Bottom (combinationByIndex (playerInputs !! index) 2),
+        points = getPoints Bottom (PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)),
         totalCombination = fst $ getLinePoints index 2,
         totalBonus = snd $ getLinePoints index 2
       },
@@ -120,7 +120,7 @@ calcGame playerInputs
         top >= RankCombination Pair (Card Queen Hearts)
         || middle >= PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)
         || bottom >= RankCombination StraightFlush (Card Five Hearts)
-    nextIsFantasy withFantasy _ = error "Invalid number of lines for fantasy calc"
+    nextIsFantasy withFantasy _ = False
 
     getLinePoints :: Int -> Int -> IntPair
     getLinePoints playerIndex lineIndex
@@ -147,65 +147,70 @@ collectLinesResults acc _ [] = []
 
 comparePlayers :: PlayerInput -> PlayerInput -> LineCompareResult
 comparePlayers
-  p1@PlayerInput{ username = p1name, board = (p1top:p1middle:p1bottom:_), scoop = p1scoop }
-  p2@PlayerInput{ username = p2name, board = (p2top:p2middle:p2bottom:_), scoop = p2scoop } = (
-    [p1name, p2name],
-    foldPoints [topPoints, middlePoints, bottomPoints],
-    bonusCalculated,
-    [
-      (fst topPoints, topBonus),
-      (fst middlePoints, middleBonus),
-      (fst bottomPoints, bottomBonus)
-    ]
-  ) where
-    topPoints :: IntPair
-    topPoints = (
-      if p1scoop then 0 else getPoints Top p1top,
-      if p2scoop then 0 else getPoints Top p2top
-      )
+  p1@PlayerInput{ username = p1name, board = boardP1, scoop = p1scoop }
+  p2@PlayerInput{ username = p2name, board = boardP2, scoop = p2scoop }
+    | not (null boardP1) && length boardP1 /= 3 = error "Board has to be of length 0 or 3"
+    | not (null boardP2) && length boardP2 /= 3 = error "Board has to be of length 0 or 3"
+    | otherwise = (
+      [p1name, p2name],
+      foldPoints [topPoints, middlePoints, bottomPoints],
+      bonusCalculated,
+      [
+        (fst topPoints, topBonus),
+        (fst middlePoints, middleBonus),
+        (fst bottomPoints, bottomBonus)
+      ]
+    ) where
+      topPoints :: IntPair
+      topPoints = (
+        0, 0
+        )
 
-    middlePoints :: IntPair
-    middlePoints = (
-      if p1scoop then 0 else getPoints Middle p1middle,
-      if p2scoop then 0 else getPoints Middle p2middle
-      )
+      middlePoints :: IntPair
+      middlePoints = (
+        0, 0
+        )
 
-    bottomPoints :: IntPair
-    bottomPoints = (
-      if p1scoop then 0 else getPoints Bottom p1bottom,
-      if p2scoop then 0 else getPoints Bottom p2bottom
-      )
+      bottomPoints :: IntPair
+      bottomPoints = (
+        0, 0
+        )
 
-    mirrorPoints :: Int -> (Int, Int)
-    mirrorPoints p = (p, negate p)
+      mirrorPoints :: Int -> (Int, Int)
+      mirrorPoints p = (p, negate p)
 
-    getBonus :: Combination -> Combination -> Int
-    getBonus c1 c2 = case (p1scoop, p2scoop) of
-      (True, True) -> 0
-      (True, False) -> -1
-      (False, True) -> 1
-      (False, False) -> if c1 > c2
-        then 1
-        else (-1)
+      getBonusScoop :: Int
+      getBonusScoop = case (p1scoop, p2scoop) of
+        (True, True) -> 0
+        (True, False) -> -1
+        (False, True) -> 1
+        (False, False) -> error "getBonusDefault should be used this case"
 
-    topBonus :: Int
-    topBonus = getBonus p1top p2top
+      getBonusDefault :: Combination -> Combination -> Int
+      getBonusDefault c1 c2
+        | c1 > c2 = 1
+        | otherwise = -1
 
-    middleBonus :: Int
-    middleBonus = getBonus p1middle p2middle
+      anyScoop :: Bool
+      anyScoop = p1scoop || p2scoop
 
-    bottomBonus :: Int
-    bottomBonus = getBonus p1bottom p2bottom
+      topBonus :: Int
+      topBonus =0
 
-    summBonus :: Int
-    summBonus = topBonus + middleBonus + bottomBonus
+      middleBonus :: Int
+      middleBonus=0
 
-    bonusCalculated :: Int
-    bonusCalculated = case topBonus + middleBonus + bottomBonus of
-      3 -> 6
-      (-3) -> -6
-      b -> b
-comparePlayers _ _ = error "Failed to compare"
+      bottomBonus :: Int
+      bottomBonus=0
+
+      summBonus :: Int
+      summBonus = topBonus + middleBonus + bottomBonus
+
+      bonusCalculated :: Int
+      bonusCalculated = case topBonus + middleBonus + bottomBonus of
+        3 -> 6
+        (-3) -> -6
+        b -> b
 
 foldPoints :: [(Int, Int)] -> Int
 foldPoints [] = 0

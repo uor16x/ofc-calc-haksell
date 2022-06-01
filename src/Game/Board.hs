@@ -63,7 +63,7 @@ getUserBoard cardsTwo = 'Left'
 -}
 getUserBoard :: [String] -> Either String Board
 getUserBoard full
-    | length full /= 13 = Left "List length should be 13"
+    | length full /= 13 = Right []
     | not $ null boardDuplicates = Left $ "Duplicates ocurred: " ++ boardDuplicates
     | not $ null failedCards = Left failedCardsErrMsg
     | otherwise = Right $ getLines [ card | Right card <- parsedCards ]
