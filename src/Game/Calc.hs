@@ -122,7 +122,7 @@ collectLinesResults acc full (currPlayer:players) =
       negateTuple (a, b) = (negate a, negate b)
 
       getResult :: PlayerInput -> PlayerInput -> ([String], Int, Int, [(Int, Int)])
-      getResult player1 player2 = case find (\(usernames, _, _, _) -> usernames == [username player2, username player2] ) acc of
+      getResult player1 player2 = case find (\(usernames, _, _, _) -> usernames == [username player2, username player1] ) acc of
         Just (usernames, combo, bonus, debug) -> (reverse usernames, negate combo, negate bonus, map negateTuple debug)
         _ -> comparePlayers player1 player2
 collectLinesResults acc _ [] = []
