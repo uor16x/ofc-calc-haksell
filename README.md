@@ -16,4 +16,3 @@ Documentation is [here](https://uor16x.github.io/ofc-calc-haskell/).
 - [x] Is next hand fantasy
 - [ ] Documentation
 - [ ] Comments
-- [ ] Fix debug info calc
