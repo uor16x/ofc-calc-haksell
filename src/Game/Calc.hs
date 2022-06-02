@@ -34,7 +34,7 @@ type LineCompareResult = ([String], Int, Int, [(Int, Int)])
 
 data LineResult = LineResult {
     lineType :: LineType,
-    combination :: Combination,
+    combination :: Maybe Combination,
     points :: Int,
     totalCombination :: Int,
     totalBonus :: Int
@@ -73,27 +73,28 @@ calcGame playerInputs
       player = playerInputs !! index,
       isScoop = scoop $ playerInputs !! index,
       isNextFantasy =
+        not (scoop (playerInputs !! index)) &&
         nextIsFantasy
         (withFantasy $ playerInputs !! index)
         (board $ playerInputs !! index),
       top = LineResult {
         combination = combinationByIndex (playerInputs !! index) 0, -- top line has index 0,
         lineType = Top,
-        points = getPoints Top (combinationByIndex (playerInputs !! index) 0),
+        points = pointsCalc Top (combinationByIndex (playerInputs !! index) 0),
         totalCombination = fst $ getLinePoints index 0,
         totalBonus = snd $ getLinePoints index 0
       },
       middle = LineResult {
         combination = combinationByIndex (playerInputs !! index) 1, -- middle line has index 1,
         lineType = Middle,
-        points = getPoints Middle (combinationByIndex (playerInputs !! index) 1),
+        points = pointsCalc Middle (combinationByIndex (playerInputs !! index) 1),
         totalCombination = fst $ getLinePoints index 1,
         totalBonus = snd $ getLinePoints index 1
       },
       bottom = LineResult {
         combination = combinationByIndex (playerInputs !! index) 2, -- bottom line has index 2,
         lineType = Bottom,
-        points = getPoints Bottom (combinationByIndex (playerInputs !! index) 2),
+        points = pointsCalc Bottom (combinationByIndex (playerInputs !! index) 2),
         totalCombination = fst $ getLinePoints index 2,
         totalBonus = snd $ getLinePoints index 2
       },
@@ -101,8 +102,10 @@ calcGame playerInputs
       total = totalPoints (linesResults !! index)
       }
 
-    combinationByIndex :: PlayerInput -> Int -> Combination
-    combinationByIndex playerInput index = board playerInput !! index
+    combinationByIndex :: PlayerInput -> Int -> Maybe Combination
+    combinationByIndex playerInput index
+      | scoop playerInput = Nothing
+      | otherwise = Just $ board playerInput !! index
 
     getTotal :: LineCompareResult -> Int
     getTotal (_, combo, bonus, _) = combo + bonus
@@ -111,6 +114,7 @@ calcGame playerInputs
     totalPoints (_, compareResults) = foldl (\acc r -> acc + getTotal r) 0 compareResults
 
     nextIsFantasy :: Bool -> [Combination] -> Bool
+    nextIsFantasy withFantasy [] = False
     nextIsFantasy withFantasy (top:middle:bottom:_)
       | withFantasy =
         top >= RankCombination Set (Card Two Hearts)
@@ -120,7 +124,8 @@ calcGame playerInputs
         top >= RankCombination Pair (Card Queen Hearts)
         || middle >= PartCombination FullHouse (Card Two Hearts) (Card Three Hearts)
         || bottom >= RankCombination StraightFlush (Card Five Hearts)
-    nextIsFantasy withFantasy _ = error "Invalid number of lines for fantasy calc"
+    nextIsFantasy _ _ = False
+
 
     getLinePoints :: Int -> Int -> IntPair
     getLinePoints playerIndex lineIndex
@@ -147,8 +152,8 @@ collectLinesResults acc _ [] = []
 
 comparePlayers :: PlayerInput -> PlayerInput -> LineCompareResult
 comparePlayers
-  p1@PlayerInput{ username = p1name, board = (p1top:p1middle:p1bottom:_), scoop = p1scoop }
-  p2@PlayerInput{ username = p2name, board = (p2top:p2middle:p2bottom:_), scoop = p2scoop } = (
+  p1@PlayerInput{ username = p1name, board = boardP1, scoop = p1scoop }
+  p2@PlayerInput{ username = p2name, board = boardP2, scoop = p2scoop } = (
     [p1name, p2name],
     foldPoints [topPoints, middlePoints, bottomPoints],
     bonusCalculated,
@@ -160,42 +165,55 @@ comparePlayers
   ) where
     topPoints :: IntPair
     topPoints = (
-      if p1scoop then 0 else getPoints Top p1top,
-      if p2scoop then 0 else getPoints Top p2top
+      if p1scoop then 0 else getPoints Top (head boardP1),
+      if p2scoop then 0 else getPoints Top (head boardP2)
       )
 
     middlePoints :: IntPair
     middlePoints = (
-      if p1scoop then 0 else getPoints Middle p1middle,
-      if p2scoop then 0 else getPoints Middle p2middle
+      if p1scoop then 0 else getPoints Middle (head $ tail boardP1),
+      if p2scoop then 0 else getPoints Middle (head $ tail boardP2)
       )
 
     bottomPoints :: IntPair
     bottomPoints = (
-      if p1scoop then 0 else getPoints Bottom p1bottom,
-      if p2scoop then 0 else getPoints Bottom p2bottom
+      if p1scoop then 0 else getPoints Bottom (last boardP1),
+      if p2scoop then 0 else getPoints Bottom (last boardP2)
       )
 
     mirrorPoints :: Int -> (Int, Int)
     mirrorPoints p = (p, negate p)
 
-    getBonus :: Combination -> Combination -> Int
-    getBonus c1 c2 = case (p1scoop, p2scoop) of
+    getDefaultBonus :: Combination -> Combination -> Int
+    getDefaultBonus c1 c2
+      | c1 > c2 = 1
+      | c1 == c2 = 0
+      | otherwise = -1
+
+    getScoopBonus :: Int
+    getScoopBonus = case (p1scoop, p2scoop) of
       (True, True) -> 0
       (True, False) -> -1
       (False, True) -> 1
-      (False, False) -> if c1 > c2
-        then 1
-        else (-1)
+      (False, False) -> error "getDefaultBonus shouldb be used for this case"
+
+    anyScoop :: Bool
+    anyScoop = p1scoop || p2scoop
 
     topBonus :: Int
-    topBonus = getBonus p1top p2top
+    topBonus
+      | anyScoop = getScoopBonus
+      | otherwise = getDefaultBonus (head boardP1) (head boardP2)
 
     middleBonus :: Int
-    middleBonus = getBonus p1middle p2middle
+    middleBonus
+      | anyScoop = getScoopBonus
+      | otherwise = getDefaultBonus (head $ tail boardP1) (head $ tail boardP2)
 
     bottomBonus :: Int
-    bottomBonus = getBonus p1bottom p2bottom
+    bottomBonus
+      | anyScoop = getScoopBonus
+      | otherwise = getDefaultBonus (last boardP1) (last boardP2)
 
     summBonus :: Int
     summBonus = topBonus + middleBonus + bottomBonus
@@ -205,7 +223,6 @@ comparePlayers
       3 -> 6
       (-3) -> -6
       b -> b
-comparePlayers _ _ = error "Failed to compare"
 
 foldPoints :: [(Int, Int)] -> Int
 foldPoints [] = 0
@@ -216,6 +233,11 @@ middlePoints = [0, 0, 0, 2, 4, 8, 12, 20, 30, 50]
 
 bottomPoints :: [Int]
 bottomPoints = map (\p -> if p > 2 then p `div` 2 else 0) middlePoints
+
+pointsCalc :: LineType -> Maybe Combination -> Int
+pointsCalc lineType combo = case combo of
+  Just c -> getPoints lineType c
+  Nothing -> 0
 
 getPoints :: LineType -> Combination -> Int
 getPoints Top (RankCombination Pair (Card rank _)) =

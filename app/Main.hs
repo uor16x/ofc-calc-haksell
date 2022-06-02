@@ -72,8 +72,11 @@ parseBoard BoardInput { username = username, withFantasy = withFantasy, board = 
     }
     Left msg -> Left $ "Parsing of combinations failed: " ++ msg
     where
-        parsedCombinations = mapM parseCombination board
+        parsedCombinations
+          | length board /= 3 = Right []
+          | otherwise = mapM parseCombination board
         isScoop combinations =
-            head combinations > head (tail combinations)
-            || head (tail combinations) > last combinations
+            length combinations /= 3 ||
+            head combinations > head (tail combinations) ||
+            head (tail combinations) > last combinations
 parseBoard _ = Left "Valid BoardInput should be passed here"
