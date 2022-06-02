@@ -76,9 +76,7 @@ parseBoard BoardInput { username = username, withFantasy = withFantasy, board = 
           | length board /= 3 = Right []
           | otherwise = mapM parseCombination board
         isScoop combinations =
-            length combinations == 13 &&
-            (
-              head combinations > head (tail combinations) ||
-              head (tail combinations) > last combinations
-            )
+            length combinations /= 3 ||
+            head combinations > head (tail combinations) ||
+            head (tail combinations) > last combinations
 parseBoard _ = Left "Valid BoardInput should be passed here"
