@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
--- | Poker combination and its processing methods
+-- | Poker combination and its processing functions
 module Game.Combination(
     Combination(..),
     getOccurrences,

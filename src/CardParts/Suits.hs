@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
--- | Card suit data type and its processing methods
+-- | Card suit data type and its processing functions
 module CardParts.Suits(Suit(..), parseSuit) where
 
 import Data.List (elemIndex)
@@ -17,7 +17,7 @@ data Suit = Hearts
 instance FromJSON Suit
 instance ToJSON Suit
 
-{- | This method gets a char which represents card suit
+{- | This function gets a char which represents card suit
 and returns a 'Suit' wrapped with 'Right'.
 
 Char should be a lowercase symbol from "hdcs" list.
@@ -41,6 +41,6 @@ parseSuit symbol = case symbol `elemIndex` suitSymbols of
         allSuits = [minBound .. maxBound] :: [Suit]
 
         -- | 'Suit' symbols are [hdcs].
-        -- This method take each 'Suit's' first letter lowercase to form this list.
+        -- This function take each 'Suit's' first letter lowercase to form this list.
         suitSymbols :: [Char]
         suitSymbols = [toLower . head . show $ s | s <- allSuits]

@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
--- | Card value data type and its processing methods
+-- | Card value data type and its processing functions
 module CardParts.Values(Value(..), parseValue) where
 
 import Data.List (elemIndex)
@@ -28,7 +28,7 @@ instance ToJSON Value
 -- | Shorthand for 'Value' 'Either' wrapper
 type ValueResult = Either String Value
 
-{- | This method gets a char which represents card value
+{- | This function gets a char which represents card value
 and returns a 'Value' wrapped with 'Maybe'.
 
 Char should be a digit between 2 and 9 or an uppercase symbol from [AKQJT] list.
@@ -61,7 +61,7 @@ parseValue symbol
         allValues = [minBound .. maxBound] :: [Value]
 
         -- | Broadway 'Value' symbols are "AKQJT".
-        -- This method take last five 'Value's' first letter to form this list.
+        -- This function take last five 'Value's' first letter to form this list.
         broadwaySymbols :: [Char]
         broadwaySymbols = [head . show $ s | s <- take 5 $ reverse allValues]
 

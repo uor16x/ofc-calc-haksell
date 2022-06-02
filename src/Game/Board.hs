@@ -1,4 +1,4 @@
--- | User board and its processing methods
+-- | User board and its processing functions
 module Game.Board where
 
 import CardParts.Cards ( Card (..), parseCard )
@@ -12,7 +12,7 @@ type CardParseResult = Either String Card
 -- | Shorthand for board type
 type Board = [[Card]]
 
-{- | This method gets a list of strings which items represents a card notation.
+{- | This function gets a list of strings which items represents a card notation.
 Returns 'Either' type, where 'Left' is 'String' with error message,
 and 'Right' is 'Board' type.
 Processes only list of length 13.

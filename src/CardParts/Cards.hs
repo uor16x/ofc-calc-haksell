@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
--- | Combined (value + suit) card data type and its processing methods
+-- | Combined (value + suit) card data type and its processing functions
 module CardParts.Cards where
 
 import CardParts.Suits ( Suit (..), parseSuit )
@@ -34,8 +34,8 @@ instance Eq Card where
 instance Ord Card where
     c1@Card {} `compare` c2@Card {} = value c1 `compare` value c2
 
-{- | This method gets a string which represents full card combination (value + suit)
-and returns a 'Card' wrapped with 'Right'. The function uses 'parseValue' and 'parseSuit' methods.
+{- | This function gets a string which represents full card combination (value + suit)
+and returns a 'Card' wrapped with 'Right'. The function uses 'parseValue' and 'parseSuit' functions.
 
 Passed string should have length 2 and have format "{VALUE}{SUIT}".
 
