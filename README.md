@@ -14,5 +14,6 @@ Documentation is [here](https://uor16x.github.io/ofc-calc-haskell/).
 - [x] Compare user points
 - [x] Is player scooped
 - [x] Is next hand fantasy
+- [x] Allow empty input as scoop 
 - [ ] Documentation
 - [ ] Comments
