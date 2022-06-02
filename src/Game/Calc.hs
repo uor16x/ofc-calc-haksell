@@ -30,7 +30,9 @@ data LineType = Top | Middle | Bottom deriving (Show, Generic)
 instance FromJSON LineType
 instance ToJSON LineType
 
-type LineCompareResult = ([String], Int, Int, [(Int, Int)])
+type IntPair = (Int, Int)
+
+type LineCompareResult = ([String], Int, Int, [IntPair])
 
 data LineResult = LineResult {
     lineType :: LineType,
@@ -56,8 +58,6 @@ data PlayerCalculations = PlayerCalculations {
 
 instance FromJSON PlayerCalculations
 instance ToJSON PlayerCalculations
-
-type IntPair = (Int, Int)
 
 calcGame :: [PlayerInput] -> [PlayerCalculations]
 calcGame playerInputs
@@ -141,10 +141,10 @@ collectLinesResults acc full (currPlayer:players) =
       otherInputs :: [PlayerInput]
       otherInputs = filter (\player -> username player /= username currPlayer) full
 
-      negateTuple :: (Int, Int) -> (Int, Int)
+      negateTuple :: IntPair -> IntPair
       negateTuple (a, b) = (negate a, negate b)
 
-      getResult :: PlayerInput -> PlayerInput -> ([String], Int, Int, [(Int, Int)])
+      getResult :: PlayerInput -> PlayerInput -> ([String], Int, Int, [IntPair])
       getResult player1 player2 = case find (\(usernames, _, _, _) -> usernames == [username player2, username player1] ) acc of
         Just (usernames, combo, bonus, debug) -> (reverse usernames, negate combo, negate bonus, map negateTuple debug)
         _ -> comparePlayers player1 player2
@@ -181,7 +181,7 @@ comparePlayers
       if p2scoop then 0 else getPoints Bottom (last boardP2)
       )
 
-    mirrorPoints :: Int -> (Int, Int)
+    mirrorPoints :: Int -> IntPair
     mirrorPoints p = (p, negate p)
 
     getDefaultBonus :: Combination -> Combination -> Int
@@ -224,7 +224,7 @@ comparePlayers
       (-3) -> -6
       b -> b
 
-foldPoints :: [(Int, Int)] -> Int
+foldPoints :: [IntPair] -> Int
 foldPoints [] = 0
 foldPoints ((r1, r2):xs) = (r1 - r2) + foldPoints xs
 
