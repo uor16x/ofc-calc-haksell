@@ -6,7 +6,7 @@
 @version 0.1.0.0
 
 
--- | Card suit data type and its processing methods
+-- | Card suit data type and its processing functions
 module CardParts.Suits
 
 -- | This type represents card suit.
@@ -16,7 +16,7 @@ Diamonds :: Suit
 Clubs :: Suit
 Spades :: Suit
 
--- | This method gets a char which represents card suit and returns a
+-- | This function gets a char which represents card suit and returns a
 --   <a>Suit</a> wrapped with <a>Right</a>.
 --   
 --   Char should be a lowercase symbol from "hdcs" list. Otherwise -
@@ -39,7 +39,7 @@ instance Data.Aeson.Types.FromJSON.FromJSON CardParts.Suits.Suit
 instance Data.Aeson.Types.ToJSON.ToJSON CardParts.Suits.Suit
 
 
--- | Card value data type and its processing methods
+-- | Card value data type and its processing functions
 module CardParts.Values
 
 -- | This type represents card value.
@@ -58,7 +58,7 @@ Queen :: Value
 King :: Value
 Ace :: Value
 
--- | This method gets a char which represents card value and returns a
+-- | This function gets a char which represents card value and returns a
 --   <a>Value</a> wrapped with <a>Maybe</a>.
 --   
 --   Char should be a digit between 2 and 9 or an uppercase symbol from
@@ -83,7 +83,7 @@ instance Data.Aeson.Types.FromJSON.FromJSON CardParts.Values.Value
 instance Data.Aeson.Types.ToJSON.ToJSON CardParts.Values.Value
 
 
--- | Combined (value + suit) card data type and its processing methods
+-- | Combined (value + suit) card data type and its processing functions
 module CardParts.Cards
 
 -- | This type represents a card - combination of suit and value.
@@ -92,9 +92,9 @@ Card :: Value -> Suit -> Card
 [value] :: Card -> Value
 [suit] :: Card -> Suit
 
--- | This method gets a string which represents full card combination
+-- | This function gets a string which represents full card combination
 --   (value + suit) and returns a <a>Card</a> wrapped with <a>Right</a>.
---   The function uses <a>parseValue</a> and <a>parseSuit</a> methods.
+--   The function uses <a>parseValue</a> and <a>parseSuit</a> functions.
 --   
 --   Passed string should have length 2 and have format "{VALUE}{SUIT}".
 --   
@@ -118,7 +118,7 @@ instance GHC.Classes.Eq CardParts.Cards.Card
 instance GHC.Classes.Ord CardParts.Cards.Card
 
 
--- | User board and its processing methods
+-- | User board and its processing functions
 module Game.Board
 
 -- | Parsed card result wrapper which also holds the possible err msg
@@ -127,7 +127,7 @@ type CardParseResult = Either String Card
 -- | Shorthand for board type
 type Board = [[Card]]
 
--- | This method gets a list of strings which items represents a card
+-- | This function gets a list of strings which items represents a card
 --   notation. Returns <a>Either</a> type, where <a>Left</a> is
 --   <a>String</a> with error message, and <a>Right</a> is <a>Board</a>
 --   type. Processes only list of length 13. Method is going to fail the
@@ -178,7 +178,7 @@ type Board = [[Card]]
 getUserBoard :: [String] -> Either String Board
 
 
--- | Poker combination and its processing methods
+-- | Poker combination and its processing functions
 module Game.Combination
 
 -- | This type represents a poker combination. | It is divided by two
@@ -269,6 +269,8 @@ instance GHC.Classes.Ord Game.Combination.Combination
 instance Data.Aeson.Types.FromJSON.FromJSON Game.Combination.CombinationName
 instance Data.Aeson.Types.ToJSON.ToJSON Game.Combination.CombinationName
 
+
+-- | Game calculations and its processing functions
 module Game.Calc
 data PlayerInput
 PlayerInput :: String -> [Combination] -> Bool -> Bool -> PlayerInput
@@ -276,11 +278,25 @@ PlayerInput :: String -> [Combination] -> Bool -> Bool -> PlayerInput
 [board] :: PlayerInput -> [Combination]
 [scoop] :: PlayerInput -> Bool
 [withFantasy] :: PlayerInput -> Bool
+
+-- | Data container for line result for the user.
+--   
+--   Contains data about type of line (position - top<i>middle</i>bottom),
+--   about points for the combination, total values for combo/bonus points
+--   after comparison with others.
 data LineResult
 data LineType
 Top :: LineType
 Middle :: LineType
 Bottom :: LineType
+
+-- | Container for result of calculations for each player.
+--   
+--   Contains data about given player input, description of each line in
+--   form of <a>LineResult</a>, some utility bool values, such as
+--   <a>isScoop</a>, <a>isNextFantasy</a>. Also has total sum of points for
+--   user after comparison. And a debug detailed version of the total
+--   (totalDetailed field).
 data PlayerCalculations
 PlayerCalculations :: PlayerInput -> LineResult -> LineResult -> LineResult -> Bool -> Bool -> (String, [LineCompareResult]) -> Int -> PlayerCalculations
 [player] :: PlayerCalculations -> PlayerInput
@@ -291,7 +307,24 @@ PlayerCalculations :: PlayerInput -> LineResult -> LineResult -> LineResult -> B
 [isNextFantasy] :: PlayerCalculations -> Bool
 [totalDetailed] :: PlayerCalculations -> (String, [LineCompareResult])
 [total] :: PlayerCalculations -> Int
+
+-- | Function to compare <a>PlayerInput</a> records and retrieve calculated
+--   points. Takes two <a>PlayerInput</a> as input. Returns calculated
+--   points in form of <a>LineCompareResult</a>
 comparePlayers :: PlayerInput -> PlayerInput -> LineCompareResult
+
+-- | Main function for game calculation.
+--   
+--   Takes a list of 'PlayerInput;, which length should be 3. Return a list
+--   of <a>PlayerCalculations</a>.
+--   
+--   First of all, function receives all players comparison using
+--   <a>collectLinesResults</a>. Then it checks for input conditions:
+--   length of input and length of comparison results should be equal and
+--   should equal 3.
+--   
+--   Then for each of player input function creates
+--   <a>PlayerCalculations</a> record.
 calcGame :: [PlayerInput] -> [PlayerCalculations]
 instance GHC.Generics.Generic Game.Calc.PlayerInput
 instance GHC.Show.Show Game.Calc.PlayerInput
